@@ -4,6 +4,14 @@
 
 ---
 
+## 2026-09-09 (cont.) — Acceso a GitHub resuelto, primer push
+
+Sebastian dio acceso de escritura a Nicolas (`goost01`) en el repo. Se hizo `git push -u origin main`: los 2 commits locales (montaje del proyecto + bitácora/memoria) ya están en `https://github.com/sperezm-create/GedeNaz.git`, visibles para todo el equipo. Rama local `main` quedó trackeando `origin/main`.
+
+Se conversó y se decidió **mantener** `MEMORIA_PROYECTO.md` tal como está (no se simplifica ni se elimina): las specs documentan decisiones, `MEMORIA_PROYECTO.md` es la foto del estado operativo, `BITACORA.md` es el registro cronológico personal.
+
+---
+
 ## 2026-09-09 — Montaje del proyecto y specs iniciales
 
 **Participantes**: Nicolas Silva + asistente.

@@ -41,15 +41,14 @@ Detalle completo con criterios de aceptación: [`specs/01-requisitos-funcionales
 - ✅ Specs escritas en `docs/specs/` (visión, requisitos, modelo de datos, arquitectura, plan de trabajo, entorno).
 - ✅ Repo Git local inicializado, con commit inicial + merge con el repo remoto del equipo.
 - ✅ Entorno de desarrollo montado: `venv/` con Python 3.14.5, dependencias instaladas (`mysql-connector-python`, `python-dotenv`, `pytest`), tests de humo pasando, ventana Tkinter probada y funcionando.
-- ⏳ **Bloqueado**: el push a `https://github.com/sperezm-create/GedeNaz.git` falló con 403 — el usuario de GitHub `goost01` (Nicolas) todavía no tiene permiso de escritura en el repo. Nicolas ya pidió acceso a Sebastián (dueño del repo). El commit está listo en local (`git push -u origin main`) para cuando llegue el acceso.
+- ✅ Acceso a GitHub resuelto: Sebastián agregó a `goost01` como colaborador. Push hecho — todo lo anterior ya está en `https://github.com/sperezm-create/GedeNaz.git` (rama `main`), visible para el equipo.
 - ⏳ Nada de código de las pantallas CRUD todavía — eso empieza en la Fase 1 (tarea 1.2 en adelante, ver plan de trabajo). Lo que existe en `src/gedenaz/` es solo el esqueleto + una ventana placeholder que confirma que el entorno funciona.
 
 ## Próximos pasos
 
-1. Confirmar acceso de Nicolas al repo GitHub y hacer `git push`.
-2. Tarea 1.2 (Francisco): instalar MySQL, crear BD `gedenaz` con `src/gedenaz/data/schema.sql`.
-3. Tarea 1.3 (Francisco): capa de conexión Python–MySQL.
-4. Tarea 1.4 (Sebastian): pantalla "Crear producto".
+1. Tarea 1.2 (Francisco): instalar MySQL, crear BD `gedenaz` con `src/gedenaz/data/schema.sql`.
+2. Tarea 1.3 (Francisco): capa de conexión Python–MySQL.
+3. Tarea 1.4 (Sebastian): pantalla "Crear producto".
 
 Cronograma completo con fechas: [`specs/04-plan-de-trabajo.md`](specs/04-plan-de-trabajo.md).
 
