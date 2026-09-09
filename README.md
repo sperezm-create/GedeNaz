@@ -2,6 +2,11 @@
 
 Aplicación de escritorio (Python + MySQL) para la gestión de inventario de joyas de la empresa GedeNaz. Proyecto del curso Taller de Sistemas de Información (INFB8082), Grupo N°6.
 
+## Memoria y bitácora
+
+- [`docs/MEMORIA_PROYECTO.md`](docs/MEMORIA_PROYECTO.md) — foto del estado actual del proyecto (léelo primero si vuelves después de un tiempo).
+- [`docs/BITACORA.md`](docs/BITACORA.md) — registro cronológico de qué se hizo en cada sesión de trabajo.
+
 ## Especificaciones (spec-first)
 
 Este proyecto se desarrolla en modalidad **spec-first**: antes de programar un cambio de alcance, requisito o modelo de datos, se actualiza el documento correspondiente en [`docs/specs/`](docs/specs/):
