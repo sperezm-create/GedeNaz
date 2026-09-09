@@ -4,6 +4,27 @@
 
 ---
 
+## 2026-09-09 (cont. 2) — Corrección de alcance: la app es Android, no de escritorio
+
+Nicolas avisó que la app **no es de escritorio, es una app móvil para Android** — contradice lo que dice el informe ya entregado hoy (H1). Se conversó con el equipo (Nicolas hizo de puente) sobre cómo conectar a MySQL desde una app móvil, porque conectar el teléfono directo a MySQL no es seguro (credenciales dentro del APK, puerto expuesto a internet).
+
+**Se investigaron alternativas gratuitas de hosting** (verificado por web, no solo memoria): PlanetScale ya no tiene plan gratis (desde abril 2024, parte en US$5/mes); Railway tiene "plan gratis" pero es en la práctica un crédito de prueba limitado; **Aiven** ofrece MySQL "always free" (1GB, sin tarjeta); **PythonAnywhere** tier gratis permite alojar un backend Flask + MySQL juntos sin tarjeta (el MySQL gratis de PythonAnywhere solo es accesible desde dentro de la misma plataforma, lo cual calza bien porque la API vive ahí mismo); **db4free.net** es gratis pero sin garantías de uptime.
+
+**Decisión del equipo**: mantener MySQL (no pasarse a SQLite local), y como es una app móvil, usar una API en el medio en vez de conexión directa — así la app nunca guarda credenciales de la base.
+
+**Qué se cambió en el repo:**
+
+- Specs actualizadas: `00-vision-y-alcance.md` (resumen y objetivos ahora dicen "app Android"), `01-requisitos-funcionales.md` (nota sobre cliente Android + validación también en la API), `02-modelo-de-datos.md` (nota: el esquema no cambia, pero ahora la API es la única que toca MySQL; se marcó como pendiente reforzar autenticación de la API ya que queda expuesta a internet), `03-arquitectura.md` (reescrito: arquitectura cliente-servidor App Android → API Flask → MySQL, reemplaza las 3 capas locales de escritorio), `04-plan-de-trabajo.md` (nota aclaratoria arriba, no se tocó la tabla transcrita de la Carta Gantt oficial).
+- Código: se eliminó `src/gedenaz/ui/` (pantallas Tkinter) y el `main.py` viejo (ventana Tkinter). Se agregó `src/gedenaz/api/` (endpoints Flask, por ahora vacío) y `src/gedenaz/app.py` (fábrica de la app Flask con un endpoint `/health`). `main.py` ahora levanta el servidor Flask. `logic/` y `data/` no cambiaron.
+- `requirements.txt`: se agregó `Flask`. Se mantienen `mysql-connector-python`, `python-dotenv`, `pytest` (siguen siendo necesarios para el backend).
+- Se creó `mobile/README.md` como placeholder: ahí va a vivir la app Android una vez que el equipo elija el framework (Kotlin / Flutter / Python+Kivy — **todavía sin decidir**, es lo próximo que hay que resolver).
+- Tests de humo actualizados: se sacó el test de Tkinter, se agregó uno que prueba que la API Flask responde en `/health`. Los 3 tests siguen en verde.
+- `README.md` y `docs/MEMORIA_PROYECTO.md` actualizados para reflejar todo esto.
+
+**Pendiente/bloqueante**: el framework de la app Android. Sin eso, Sebastian no puede empezar la pantalla "Crear producto" (tarea 1.4).
+
+---
+
 ## 2026-09-09 (cont.) — Acceso a GitHub resuelto, primer push
 
 Sebastian dio acceso de escritura a Nicolas (`goost01`) en el repo. Se hizo `git push -u origin main`: los 2 commits locales (montaje del proyecto + bitácora/memoria) ya están en `https://github.com/sperezm-create/GedeNaz.git`, visibles para todo el equipo. Rama local `main` quedó trackeando `origin/main`.

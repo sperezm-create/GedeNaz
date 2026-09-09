@@ -1,6 +1,8 @@
 # 04 · Plan de Trabajo — GedeNaz App
 
 > Derivado de `Carta Gantt GedeNaz.xlsx`. Metodología: **Kanban** en Jira (columnas Por hacer / En curso / Terminado). El jefe de proyecto (Francisco Jara) revisa y aprueba las tareas antes de marcarlas "Terminado". Fechas convertidas desde la Carta Gantt (semana S1 = 31-08-2026).
+>
+> **Nota (2026-09-09)**: la tabla de abajo es una transcripción fiel de la Carta Gantt oficial, que fue armada pensando en una app de escritorio. Tras la corrección de alcance a app Android ([00-vision-y-alcance.md](00-vision-y-alcance.md)), donde diga "interfaz de escritorio" o "formulario de escritorio" léase "pantalla Android"; donde diga "conexión Python–MySQL" léase "API Python que conecta con MySQL" ([03-arquitectura.md](03-arquitectura.md)). Las fechas, responsables y RF asociados no cambian — no se editó la tabla para no perder la trazabilidad con el documento oficial entregado.
 
 ## Roles del equipo
 

@@ -1,40 +1,49 @@
 # 03 · Arquitectura y Stack Tecnológico — GedeNaz App
 
-> Basado en la sección 8.3 del informe y en la diapositiva "Metodología y Pila Tecnológica" de la presentación (arquitectura de 3 capas). Decisión de librería GUI (Tkinter estándar) tomada en sesión de trabajo del 2026-09-09.
+> **Corrección (2026-09-09)**: GedeNaz App es una **app Android**, no una app de escritorio. Este documento reemplaza la arquitectura de 3 capas locales (Tkinter en el mismo proceso) por una arquitectura cliente-servidor. Ver [00-vision-y-alcance.md](00-vision-y-alcance.md) y [BITACORA.md](../BITACORA.md) para el porqué del cambio.
+>
+> **Decisión pendiente**: el framework de la app Android (Kotlin nativo / Flutter / Python+Kivy, etc.) todavía no está definido por el equipo. Este documento cubre lo que **sí** está decidido: se mantiene MySQL, y por seguridad la app no lo toca directo, sino a través de una API. Esa API es lo único que este repositorio implementa por ahora.
 
-## Arquitectura de 3 capas
+## Por qué una API en el medio (y no la app conectada directo a MySQL)
+
+Una app Android no debe guardar credenciales de base de datos: cualquiera puede descompilar un APK y sacarlas, y además el puerto de MySQL tendría que quedar abierto a internet. La forma estándar y segura de "usar MySQL desde una app móvil" es meter una API entre medio:
 
 ```
-┌─────────────────────────┐
-│   Capa de Usuario        │  Gedalias y Nazareth (administradores) — único tipo de usuario
-└────────────┬─────────────┘
-             │
-┌────────────▼─────────────┐
-│ Capa de Presentación y    │  Python + Tkinter (src/gedenaz/ui)
-│ Lógica                    │  Python — reglas de negocio, validaciones (src/gedenaz/logic)
-└────────────┬─────────────┘
-             │  mysql-connector-python
-┌────────────▼─────────────┐
-│   Capa de Datos           │  MySQL Server (src/gedenaz/data)
-└───────────────────────────┘
+┌──────────────────────┐
+│   App Android         │  Gedalias y Nazareth (administradores) — cliente,
+│   (framework a definir)│  fuera de este repositorio por ahora
+└──────────┬─────────────┘
+           │  HTTP/REST (JSON) — único canal permitido
+┌──────────▼─────────────┐
+│   API (backend)         │  Python + Flask — src/gedenaz/api/
+│   + Lógica de negocio    │  Python — src/gedenaz/logic/
+└──────────┬─────────────┘
+           │  mysql-connector-python (solo la API tiene credenciales)
+┌──────────▼─────────────┐
+│   Base de datos          │  MySQL Server — src/gedenaz/data/
+└──────────────────────────┘
 ```
+
+La app nunca ve una contraseña de MySQL; solo llama endpoints HTTP (`GET /productos`, `POST /productos`, etc.) y la API es la única con acceso a la base.
 
 ## Stack tecnológico
 
 | Elemento | Elección | Motivo |
 |---|---|---|
-| Lenguaje | Python (última versión estable) | Definido en informe |
-| Interfaz gráfica | **Tkinter** (`tkinter` + `tkinter.ttk`, librería estándar) | Cero dependencias externas, cero costo, currícula del curso; decisión de equipo 2026-09-09 |
-| Base de datos | MySQL Server | Definido en informe |
+| App móvil | **Android** — framework por definir | Decisión de equipo 2026-09-09 (corrige "escritorio" del informe) |
+| Backend / API | **Python + Flask** | Mantiene "Python" del informe; Flask es simple, liviano y tiene mejor soporte gratuito (ver hosting) que alternativas ASGI |
+| Base de datos | MySQL Server | Definido en informe, confirmado por el equipo tras evaluar alternativas (2026-09-09) |
 | Administración BD | MySQL Workbench | Definido en informe |
-| Conector Python↔MySQL | `mysql-connector-python` (conector oficial) | "Conector estándar de Python para MySQL" (informe 8.3) |
-| IDE | Visual Studio Code | Definido en informe |
+| Conector Python↔MySQL | `mysql-connector-python` (conector oficial) | Solo lo usa la API, nunca la app |
+| Hosting gratuito sugerido | PythonAnywhere (tier gratis: API + MySQL juntos, sin tarjeta) | Ver conversación 2026-09-09 en la bitácora; alternativas: Aiven (MySQL "always free"), db4free.net |
+| IDE (backend) | Visual Studio Code | Definido en informe |
+| IDE (app Android) | Por definir junto con el framework | Android Studio si es Kotlin nativo; distinto si es Flutter/Kivy |
 | Control de versiones | Git / GitHub | Definido en informe |
-| Gestión de tareas | Jira (tablero Kanban: Por hacer / En curso / Terminado) | Definido en informe |
-| Pruebas | `pytest` | Estándar de facto en Python, sin costo |
+| Gestión de tareas | Jira (Kanban) | Definido en informe |
+| Pruebas (backend) | `pytest` | Sin costo, estándar en Python |
 | Config / secretos | Variables de entorno vía `.env` (no versionado) | Evita credenciales de MySQL en el repo |
 
-Presupuesto de herramientas: **$0** (todo open source o de licencia gratuita).
+Presupuesto de herramientas: **$0**, confirmado tras revisar alternativas de hosting con costo asociado (PlanetScale, Railway) — se descartaron por no ser gratis de forma sostenida.
 
 ## Estructura del repositorio
 
@@ -42,14 +51,17 @@ Presupuesto de herramientas: **$0** (todo open source o de licencia gratuita).
 Proyecto/
 ├── docs/
 │   └── specs/                  # Especificaciones (spec-first) — este directorio
+├── mobile/                     # App Android — framework pendiente de decisión del equipo
+│   └── README.md               # Placeholder: qué falta decidir antes de empezar acá
 ├── src/
-│   └── gedenaz/
+│   └── gedenaz/                # Backend (API) — lo único que este repo implementa hoy
 │       ├── __init__.py
-│       ├── main.py             # Punto de entrada de la app de escritorio
+│       ├── main.py             # Punto de entrada del backend (arranca la API Flask)
+│       ├── app.py              # Fábrica de la app Flask (create_app)
 │       ├── config.py           # Carga de configuración/.env
-│       ├── ui/                 # Pantallas Tkinter (crear, listar, actualizar, eliminar)
-│       ├── logic/              # Reglas de negocio y validaciones (independiente de la UI)
-│       └── data/               # Acceso a datos MySQL (repositorio de Producto) + schema.sql
+│       ├── api/                # Endpoints HTTP (Flask) — reemplaza lo que antes era ui/
+│       ├── logic/               # Reglas de negocio y validaciones (independiente de Flask)
+│       └── data/                 # Acceso a datos MySQL (repositorio de Producto) + schema.sql
 ├── tests/                      # Pruebas con pytest, en espejo de src/gedenaz
 ├── .env.example                # Plantilla de variables de entorno (sin credenciales reales)
 ├── .gitignore
@@ -60,8 +72,8 @@ Proyecto/
 
 ## Principio de separación de capas
 
-- `ui/` **no** contiene lógica de negocio ni SQL: solo arma la interfaz y llama a `logic/`.
-- `logic/` contiene las validaciones de [01-requisitos-funcionales.md](01-requisitos-funcionales.md) (campos obligatorios, tipos de dato, stock no negativo, etc.) y orquesta llamadas a `data/`. No importa nada de `tkinter`.
+- `api/` solo traduce HTTP↔Python: recibe la request, llama a `logic/`, devuelve JSON. No contiene SQL ni reglas de negocio.
+- `logic/` contiene las validaciones de [01-requisitos-funcionales.md](01-requisitos-funcionales.md) (campos obligatorios, tipos de dato, stock no negativo, etc.) y orquesta llamadas a `data/`. No importa nada de `flask` — se puede probar con `pytest` sin levantar un servidor HTTP.
 - `data/` es la única capa que habla con MySQL (usa `mysql-connector-python`); expone funciones tipo repositorio (`crear_producto`, `listar_productos`, `actualizar_producto`, `eliminar_producto`) que reflejan el esquema de [02-modelo-de-datos.md](02-modelo-de-datos.md).
 
-Esta separación permite, si más adelante se requiere, cambiar la librería de UI sin tocar la lógica de negocio ni el acceso a datos.
+Esta separación es la misma que ya existía en la versión de escritorio, solo que `ui/` (Tkinter) se reemplazó por `api/` (Flask) — `logic/` y `data/` no cambiaron de lugar ni de responsabilidad.

@@ -1,6 +1,8 @@
 # 01 · Requisitos Funcionales — GedeNaz App
 
 > Ver [00-vision-y-alcance.md](00-vision-y-alcance.md) para el contexto general. Los campos exactos de "Producto" listados aquí son una propuesta inicial basada en el informe (sección 6.2: nombre, precio, cantidad disponible, categoría); **deben validarse con Gedalias y Nazareth** antes o durante la implementación de RF1 (así lo marca el propio análisis de riesgos del informe). Cuando se confirmen o cambien, actualizar este documento primero.
+>
+> **Nota (2026-09-09)**: el cliente es una **app Android** que habla con una API (ver [03-arquitectura.md](03-arquitectura.md)), no una app de escritorio con acceso directo a la base. "Formulario"/"pantalla" abajo se refiere a la pantalla Android; las validaciones de campos se hacen tanto en la app (para feedback inmediato) como en la API (porque la app nunca debe ser la única barrera — cualquier llamado directo a la API también debe quedar protegido).
 
 Usuario único del sistema: **administrador** (Gedalias / Nazareth), sin diferenciación de roles ni permisos.
 
@@ -43,6 +45,7 @@ Usuario único del sistema: **administrador** (Gedalias / Nazareth), sin diferen
 - El listado refleja el estado actual de la base de datos (sin caché obsoleta) cada vez que se abre o refresca la pantalla.
 - Buscar por un nombre parcial o por categoría reduce correctamente el listado (coincidencia insensible a mayúsculas/minúsculas).
 - Si no hay resultados, se informa al usuario en vez de mostrar una lista vacía sin contexto.
+- Si el teléfono no tiene conexión o la API no responde, se informa al usuario en vez de mostrar una lista vacía sin contexto (no se distingue de "sin resultados" ante el usuario final).
 
 ---
 

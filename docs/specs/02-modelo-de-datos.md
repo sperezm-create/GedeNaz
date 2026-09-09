@@ -1,6 +1,8 @@
 # 02 · Modelo de Datos — GedeNaz App
 
 > Propuesta inicial de esquema MySQL a partir del informe (sección 6.2 y RF1, [01-requisitos-funcionales.md](01-requisitos-funcionales.md)). A validar/ajustar con la empresa y con quien implemente la capa de datos (Fase 1.2, Carta Gantt).
+>
+> **Nota (2026-09-09)**: el esquema no cambia por el paso a app Android (ver [00-vision-y-alcance.md](00-vision-y-alcance.md)) — MySQL sigue siendo la base de datos, solo que ahora la toca únicamente la API (ver [03-arquitectura.md](03-arquitectura.md)), nunca la app directamente.
 
 ## Entidad: `producto`
 
@@ -47,5 +49,5 @@ Este script vivirá en `src/gedenaz/data/schema.sql` (Fase 1.2 de la Carta Gantt
 ## Decisiones de diseño a confirmar con el equipo/empresa
 
 1. **Baja lógica vs. física en RF4**: se propone `activo` (baja lógica) para no perder historial y evitar el riesgo de "Análisis de Riesgos" del informe (pérdida de datos por mala configuración de BD). RF2 (listar) debe filtrar por `activo = 1` por defecto.
-2. **Autenticación**: el informe no pide login (un único tipo de usuario, sin roles). Se asume que la app no implementa autenticación en esta versión. Si el equipo decide agregarla, documentar aquí primero.
+2. **Autenticación**: el informe no pide login (un único tipo de usuario, sin roles). Se asume que la app no implementa autenticación en esta versión. **Ojo**: al ser ahora una API expuesta en internet (no un programa de escritorio en la red local de la tienda), esto pesa más de lo pensado originalmente — cualquiera que encuentre la URL de la API podría leer/modificar el inventario sin login. Como mínimo se recomienda una clave compartida simple (API key) entre la app y la API; si el equipo decide agregar algo más, documentar aquí primero.
 3. **Categorías**: el informe menciona anillos, collares, pulseras, aros "y otros accesorios" como ejemplos, no como lista cerrada. Se modela `categoria` como texto libre en vez de tabla/catálogo aparte, para mantener el alcance simple; revisar si el equipo prefiere una tabla `categoria` normalizada.
