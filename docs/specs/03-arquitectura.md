@@ -36,7 +36,8 @@ La app nunca ve una contraseña de MySQL; solo llama endpoints HTTP (`GET /produ
 | Administración BD | MySQL Workbench | Definido en informe |
 | Conector Python↔MySQL | `mysql-connector-python` (conector oficial) | Solo lo usa la API, nunca la app |
 | Hosting de MySQL | **Aiven** (plan Free: 1GB, sin tarjeta) | PythonAnywhere se descartó (2026-09-16): desde enero 2026 MySQL solo está en sus planes pagos, y sus cuentas gratuitas ni siquiera pueden conectarse a una base externa. Ver bitácora. |
-| Hosting del backend (Flask) | **Render** (free tier: 750h/mes, sin tarjeta) — pendiente de desplegar | Se descartó Render solo-Postgres como base de datos, pero sí sirve para alojar el Flask conectado a Aiven por fuera |
+| Hosting del backend (Flask) | **Render** (free tier: 750h/mes, sin tarjeta) — guía lista en [05-entorno-desarrollo.md § 9](05-entorno-desarrollo.md), pendiente de ejecutar | Se descartó Render solo-Postgres como base de datos, pero sí sirve para alojar el Flask conectado a Aiven por fuera |
+| Servidor WSGI (producción) | `gunicorn` | El dev server de Flask (`app.run()`) no es apto para producción; Render lo corre con `gunicorn "gedenaz.app:create_app()"` |
 | IDE (backend) | Visual Studio Code | Definido en informe |
 | IDE (app Android) | Por definir junto con el framework | Android Studio si es Kotlin nativo; distinto si es Flutter/Kivy |
 | Control de versiones | Git / GitHub | Definido en informe |

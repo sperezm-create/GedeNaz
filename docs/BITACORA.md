@@ -4,6 +4,20 @@
 
 ---
 
+## 2026-09-16 (cont. 5) — Preparación para desplegar el backend en Render
+
+Se dejó todo listo para desplegar la API en Render (verificado por web: sintaxis de Gunicorn para app factory, y que Render tiene una sección "Secret Files" separada de las variables de entorno, justo para casos como el certificado CA de Aiven).
+
+**Qué se hizo:**
+
+- `requirements.txt`: se agregó `gunicorn` (el dev server de Flask no sirve para producción — la propia app lo advierte al arrancar). Se confirmó que instala bien en Windows (aunque solo se ejecuta de verdad en el Linux de Render).
+- `docs/specs/05-entorno-desarrollo.md`, nueva sección 9 "Desplegar el backend en Render": cuenta con GitHub, conectar el repo, Build Command (`pip install -r requirements.txt && pip install -e .`), Start Command (`gunicorn "gedenaz.app:create_app()"`), variables de entorno, y cómo subir el certificado CA como Secret File (no como variable de entorno normal, porque es un archivo).
+- `03-arquitectura.md`: fila de Render actualizada (guía lista, pendiente de ejecutar) + fila nueva para Gunicorn.
+
+**Pendiente**: los pasos son manuales en la web de Render (crear cuenta, conectar repo, configurar) — documentados pero no ejecutados todavía.
+
+---
+
 ## 2026-09-16 (cont. 4) — RF1 completo en el backend (crear producto)
 
 Con la conexión ya lista (tarea 1.3), se implementó RF1 de punta a punta en el backend — tareas 1.5 y 1.6 de la Carta Gantt (Francisco y Sebastian respectivamente), avanzadas en conjunto.
