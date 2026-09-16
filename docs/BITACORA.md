@@ -4,6 +4,27 @@
 
 ---
 
+## 2026-09-16 (cont. 8) — CRUD completo en el backend (RF2, RF3, RF4)
+
+Con RF1 ya en producción, Nicolas pidió dejar el CRUD completo del backend listo (RF2 Leer, RF3 Actualizar, RF4 Eliminar), siguiendo el mismo patrón de 3 capas que RF1.
+
+**Qué se agregó, en `data/productos.py` → `logic/productos.py` → `api/productos.py`:**
+
+- **RF2**: `listar_productos(nombre?, categoria?)` (filtro parcial insensible a mayúsculas, solo productos con `activo = 1`) y `obtener_producto(id)` (detalle, `NotFoundError` si no existe/inactivo) → `GET /productos` y `GET /productos/<id>`.
+- **RF3**: `actualizar_producto(id, datos)` — reusa `validar_producto()` de RF1 (mismas reglas), UPDATE completo de los 4 campos (el "ajuste de stock" es simplemente mandar el nuevo valor, no un delta) → `PUT /productos/<id>` (`400` validación, `404` no existe).
+- **RF4**: `eliminar_producto(id)` — baja lógica (`UPDATE activo = 0`, nunca `DELETE` físico, valida la decisión de `02-modelo-de-datos.md`) → `DELETE /productos/<id>` (`204` éxito, `404` no existe/ya inactivo).
+- Excepción nueva `NotFoundError` en `logic/productos.py`, paralela a `ValidationError`, para que la API traduzca a `404` limpiamente.
+
+**Tests**: de 21 a 30. Los de `logic/` siguen sin tocar la base (la validación de RF3 corre antes de llamar a `data/`, así que se puede probar sin `.env`). Los de `data/` y `api/` prueban contra Aiven de verdad — incluye un test que confirma que la baja lógica **no borra la fila** (se verifica `activo = 0` directo en la tabla) y que repetir la baja sobre algo ya inactivo no hace nada.
+
+**Verificado manualmente** con `curl` contra la API local: flujo completo crear → listar (filtrado) → detalle → actualizar → eliminar → detalle post-eliminación (`404`) — todo correcto. Base de Aiven confirmada en 0 filas después de limpiar los datos de prueba (incluido un producto que quedó con baja lógica, borrado físicamente a mano por ser solo dato de prueba).
+
+**Specs actualizadas**: notas "✅ Backend implementado" en RF2, RF3 y RF4 (`01-requisitos-funcionales.md`) — la de RF4 además marca como resuelta la decisión "física vs. lógica" que estaba pendiente (se implementó baja lógica), aunque sigue sin confirmarse con la empresa. Estado de `data/` actualizado en `03-arquitectura.md` (CRUD completo, ya no "pendiente para RF2-RF4").
+
+**Estado**: el backend tiene las 4 operaciones CRUD completas, probadas y en producción. Lo único que falta para el sistema completo es la app Android (bloqueada por la decisión de framework).
+
+---
+
 ## 2026-09-16 (cont. 7) — Propuesta de diseño: registro de ventas (RF3.1)
 
 Nicolas preguntó cómo se manejaría el registro de ventas (¿se guarda en la BD? ¿cómo?). Se aclaró que **hoy no existe ningún registro de ventas** — RF3 solo permite editar el stock a mano, sin dejar rastro de qué se vendió ni a qué precio. Se confirmó con Nicolas que esto era **solo curiosidad sobre RF3.1** (trabajo futuro, explícitamente fuera del alcance del informe entregado), no un pedido de ampliar el alcance ahora.

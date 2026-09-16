@@ -1,4 +1,4 @@
-"""Pruebas de las reglas de negocio de RF1 (Crear producto).
+"""Pruebas de las reglas de negocio de RF1/RF3 (validaciones).
 
 No tocan Flask ni MySQL -- corren siempre, sin necesitar .env ni base
 de datos configurada.
@@ -6,7 +6,7 @@ de datos configurada.
 
 import pytest
 
-from gedenaz.logic.productos import ValidationError, validar_producto
+from gedenaz.logic.productos import ValidationError, actualizar_producto, validar_producto
 
 
 def test_producto_valido_no_lanza_error():
@@ -71,3 +71,11 @@ def test_reporta_todos_los_campos_faltantes_a_la_vez():
     with pytest.raises(ValidationError) as exc:
         validar_producto({})
     assert set(exc.value.errores) == {"nombre", "categoria", "precio", "stock"}
+
+
+def test_actualizar_producto_valida_antes_de_tocar_la_base():
+    """La validacion de RF3 corre antes de llamar a la capa de datos, asi
+    que este test no necesita .env ni conexion a MySQL."""
+    with pytest.raises(ValidationError) as exc:
+        actualizar_producto(1, {"nombre": "Anillo", "categoria": "anillo", "precio": 100, "stock": -1})
+    assert "stock" in exc.value.errores

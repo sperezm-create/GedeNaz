@@ -50,16 +50,16 @@ Detalle completo con criterios de aceptación: [`specs/01-requisitos-funcionales
 - ⏳ **Pendiente y bloqueante para el resto del equipo**: elegir el framework de la app Android (ver `mobile/README.md`).
 - ✅ **Base de datos en la nube lista**: servicio `mysql-gedenaz-bd` creado en Aiven, tabla `producto` aplicada y verificada (con `scripts/apply_schema.py`, útil porque MySQL Workbench se cuelga contra bases remotas — bug conocido). El `.env` de Nicolas ya está completo y probado end-to-end contra Aiven.
 - ✅ **Tarea 1.3 avanzada**: capa de conexión Python–MySQL (`src/gedenaz/data/db.py`) + endpoint `GET /health/db`. Se encontró y arregló un bug real (`pyproject.toml` + `pip install -e .`, sin eso `python src/gedenaz/main.py` no corre).
-- ✅ **RF1 completo en el backend** (tareas 1.5 y 1.6): `POST /productos` crea un producto validado (nombre/categoría obligatorios, precio > 0, stock ≥ 0) y lo guarda en Aiven. Probado con `pytest` (21 tests) y manualmente con `curl`, de punta a punta. Ver [`BITACORA.md`](BITACORA.md) para el detalle de las 3 capas.
+- ✅ **CRUD completo en el backend, en producción** (RF1-RF4): `POST/GET/PUT/DELETE /productos` — crear, listar/filtrar/detalle, actualizar y eliminar (baja lógica). Probado con `pytest` (30 tests) y manualmente con `curl`, de punta a punta contra Aiven y contra `https://gedenaz-api.onrender.com`. Ver [`BITACORA.md`](BITACORA.md) para el detalle de las 3 capas.
 - ✅ **Backend desplegado y funcionando en Render**: `https://gedenaz-api.onrender.com` — `/health`, `/health/db` y `POST /productos` probados en producción, responden bien. Como el repo no es de Nicolas (es de Sebastian) y es público, se usó "Public Git Repository" en vez de conectar GitHub (sin auto-deploy: hay que apretar "Manual Deploy" en Render después de cada push que quieran llevar a producción).
-- ⏳ RF2, RF3 y RF4 sin implementar todavía (`listar_productos`, `actualizar_producto`, `eliminar_producto`).
+- ⏳ El backend está funcionalmente completo. Lo único que falta para tener el sistema completo es la **app Android** (bloqueada por la decisión de framework).
 
 ## Próximos pasos
 
-1. **Decidir el framework de la app Android** (todo el equipo) — ver `mobile/README.md`. Bloquea la tarea 1.4 (pantalla "Crear producto"), que ya tiene un endpoint real y en producción (`https://gedenaz-api.onrender.com/productos`) esperándola.
-2. Avisarle a Francisco y Sebastian que las tareas 1.3, 1.5 y 1.6 ya quedaron avanzadas (y desplegadas) — revisar `src/gedenaz/{data,logic,api}/` antes de seguir.
-3. **Recordatorio permanente**: el deploy en Render no es automático (repo público, sin conexión a GitHub) — después de cada push a `main` que quieran llevar a producción, hay que entrar al panel de Render y apretar "Manual Deploy".
-4. Cuando se retome el plan de trabajo: RF2 (Fase 2, listar/buscar productos).
+1. **Decidir el framework de la app Android** (todo el equipo) — ver `mobile/README.md`. Es el único bloqueante real que queda: el backend (RF1-RF4) ya está completo y en producción, esperando a que exista una app que lo consuma.
+2. Avisarle al equipo (Francisco, Sebastian, Cristóbal) que las tareas 1.3, 1.5, 1.6 y todo el resto del CRUD (Fases 2 y 3 del plan) ya quedaron avanzadas y desplegadas — revisar `src/gedenaz/{data,logic,api}/` antes de seguir, para no duplicar trabajo.
+3. Presentarle al equipo la propuesta de registro de ventas ([`propuestas/registro-de-ventas.md`](propuestas/registro-de-ventas.md)) si quieren discutirla.
+4. **Recordatorio permanente**: el deploy en Render no es automático (repo público, sin conexión a GitHub) — después de cada push a `main` que quieran llevar a producción, hay que entrar al panel de Render y apretar "Manual Deploy".
 
 Cronograma completo con fechas: [`specs/04-plan-de-trabajo.md`](specs/04-plan-de-trabajo.md).
 

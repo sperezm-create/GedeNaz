@@ -36,6 +36,8 @@ Usuario único del sistema: **administrador** (Gedalias / Nazareth), sin diferen
 
 **Como** administrador, **quiero** ver y buscar los productos del inventario **para** conocer la disponibilidad real sin ir a bodega.
 
+> ✅ **Backend implementado y en producción** (2026-09-16): `GET /productos` (lista, con filtros opcionales `?nombre=` y `?categoria=`, coincidencia parcial insensible a mayúsculas) y `GET /productos/<id>` (detalle, `404` si no existe), en `src/gedenaz/api/productos.py`. Solo devuelve productos activos (baja lógica de RF4). Falta la pantalla Android (tarea 2.1/2.4, depende del framework).
+
 **Funciones**
 
 - Listado completo de productos (nombre, categoría, precio, stock).
@@ -54,6 +56,8 @@ Usuario único del sistema: **administrador** (Gedalias / Nazareth), sin diferen
 ## RF3 — Actualizar producto
 
 **Como** administrador, **quiero** editar los datos de un producto existente y ajustar su stock **para** mantener el inventario al día tras una venta o reposición.
+
+> ✅ **Backend implementado y en producción** (2026-09-16): `PUT /productos/<id>` (`src/gedenaz/api/productos.py`) — reusa las mismas validaciones de RF1 (`400` si son inválidas), `404` si el producto no existe/está inactivo. El edit es de los 4 campos completos (no parcial), recibiendo el stock ya ajustado (no un delta) — así que "ajustar stock" es simplemente enviar el nuevo valor. Falta la pantalla Android (tarea 2.5, depende del framework).
 
 **Funciones**
 
@@ -78,11 +82,13 @@ Generación de reportes de ventas o productos más rentables. Queda como **traba
 
 **Como** administrador, **quiero** dar de baja un producto que ya no forma parte del inventario **para** que no aparezca como disponible.
 
+> ✅ **Backend implementado y en producción** (2026-09-16): `DELETE /productos/<id>` (`src/gedenaz/api/productos.py`) — `204` si se dio de baja, `404` si no existía o ya estaba inactivo. Falta la pantalla Android con el diálogo de confirmación (criterio de aceptación de abajo) — **la confirmación es responsabilidad de la UI**, la API solo ejecuta la baja cuando la llaman, sin pedir confirmación propia.
+
 **Criterios de aceptación**
 
 - La eliminación requiere una **confirmación explícita** del usuario antes de ejecutarse (diálogo de confirmación) — no debe haber borrado accidental de un solo clic.
 - Tras confirmar, el producto deja de aparecer en el listado (RF2).
-- Decisión a validar con el equipo: borrado físico (`DELETE`) vs. baja lógica (columna `activo`/`eliminado`). Ver nota en [02-modelo-de-datos.md](02-modelo-de-datos.md).
+- ✅ Decidido e implementado: **baja lógica** (columna `activo`, no `DELETE` físico) — ver [02-modelo-de-datos.md](02-modelo-de-datos.md). Sigue pendiente de validar con la empresa (Gedalias/Nazareth) si este comportamiento (el producto "desaparece" pero sus datos no se pierden) es el esperado.
 
 ---
 
