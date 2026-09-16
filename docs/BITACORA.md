@@ -4,6 +4,26 @@
 
 ---
 
+## 2026-09-16 (cont.) — PythonAnywhere descartado: MySQL ya no está en el plan gratis
+
+Nicolas fue a ejecutar la guía de PythonAnywhere y el panel le avisó que MySQL no está disponible en cuentas gratis. Se verificó por web: **PythonAnywhere movió el acceso a MySQL (y las tareas programadas) a sus planes pagos desde enero de 2026** (cuentas gratis creadas antes del 15-01-2026 conservan el acceso, las nuevas no). Además, se confirmó que las cuentas gratuitas de PythonAnywhere **no pueden conectarse a ninguna base de datos externa** (solo HTTP/HTTPS a una lista blanca de sitios, ningún otro protocolo) — así que tampoco servía como "solo hosting del backend" apuntando a MySQL en otro lado.
+
+**Nuevo plan, verificado por web**: separar los dos servicios.
+- **Aiven** para MySQL — plan "Free" (1GB RAM/almacenamiento), sin tarjeta, sin límite de tiempo (aunque se apaga solo tras inactividad prolongada, avisando antes por correo). Base por defecto: `defaultdb`; exige conexión SSL (certificado CA descargable desde su consola).
+- **Render** para alojar la API Flask — su free tier sí permite conexiones salientes a bases de datos externas como Aiven (solo bloquea puertos SMTP), a diferencia de PythonAnywhere.
+
+**Qué se cambió en el repo:**
+
+- `src/gedenaz/data/schema_pythonanywhere.sql` → renombrado a `schema_cloud.sql` (sigue sirviendo: la idea de "sin CREATE DATABASE, la base ya existe" aplica igual a Aiven).
+- `docs/specs/05-entorno-desarrollo.md` sección 8 reescrita para Aiven (pasos verificados: crear servicio MySQL, anotar host/puerto/usuario/password, descargar certificado CA, crear/usar base, correr `schema_cloud.sql`), con nota de que desplegar el backend en Render queda pendiente de ejecutar.
+- `src/gedenaz/config.py`: se agregó el campo `ssl_ca` a `DBConfig` (variable de entorno `DB_SSL_CA`), porque Aiven exige SSL y `mysql-connector-python` necesita la ruta al certificado.
+- `.env.example` actualizado con el formato de Aiven en vez de PythonAnywhere.
+- `docs/specs/03-arquitectura.md`: tabla de stack actualizada (Aiven para MySQL, Render para el backend, ambos pendientes de desplegar de verdad).
+
+**Pendiente**: ejecutar de verdad los pasos en Aiven (crear cuenta, servicio, correr el esquema) y luego desplegar la API en Render — ninguno de los dos está hecho todavía, solo documentado.
+
+---
+
 ## 2026-09-16 — SQL vs NoSQL, evaluación de Render, y guía de despliegue en PythonAnywhere
 
 **Contexto**: Nicolas preguntó si el modelo de datos SQL serviría para Firebase (NoSQL) a futuro, lo que llevó a una conversación más amplia sobre SQL vs NoSQL para este proyecto.

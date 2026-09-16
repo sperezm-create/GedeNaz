@@ -36,7 +36,7 @@ Detalle completo con criterios de aceptación: [`specs/01-requisitos-funcionales
 - **Cliente**: app Android. **Framework todavía sin decidir** (Kotlin / Flutter / Python+Kivy) — el equipo lo está conversando.
 - **Datos**: se mantiene **MySQL** (el equipo lo confirmó tras evaluar alternativas locales/SQLite), pero la app **nunca** se conecta directo a la base — no es seguro guardar credenciales de MySQL dentro de un APK.
 - **Arquitectura**: por eso hay una API en el medio — `App Android → API (Flask) → MySQL`. Dentro de la API: `api/` (endpoints HTTP) → `logic/` (reglas de negocio/validaciones) → `data/` (acceso a MySQL). Ver [`specs/03-arquitectura.md`](specs/03-arquitectura.md) para el detalle y el porqué.
-- **Hosting**: **PythonAnywhere** (decisión confirmada 2026-09-16) — API + MySQL juntos, sin costo, sin tarjeta. Se evaluaron Render (no soporta MySQL, solo Postgres), Aiven, db4free.net, PlanetScale y Railway (estas dos últimas descartadas por no ser gratis de forma sostenida). Guía paso a paso para montar la base ahí: [`specs/05-entorno-desarrollo.md`](specs/05-entorno-desarrollo.md#8-desplegar-la-base-de-datos-en-pythonanywhere).
+- **Hosting**: **Aiven** para MySQL + **Render** para el backend Flask (decisión confirmada 2026-09-16, corrigiendo a PythonAnywhere del mismo día — ver nota abajo). Ambos gratis, sin tarjeta. Se descartaron PythonAnywhere (MySQL pasó a ser de pago desde enero 2026, y sus cuentas gratis ni siquiera pueden conectarse a una base externa), PlanetScale y Railway (no son gratis de forma sostenida). Guía paso a paso para montar la base en Aiven: [`specs/05-entorno-desarrollo.md`](specs/05-entorno-desarrollo.md#8-desplegar-la-base-de-datos-en-aiven).
 - **Base de datos**: una sola tabla relevante por ahora, `producto` (ver [`specs/02-modelo-de-datos.md`](specs/02-modelo-de-datos.md)) — el esquema no cambió por el paso a Android.
 
 ## Estado actual (2026-09-16)
@@ -45,17 +45,19 @@ Detalle completo con criterios de aceptación: [`specs/01-requisitos-funcionales
 - ✅ Repo Git local inicializado, con commit inicial + merge con el repo remoto del equipo. Acceso a GitHub resuelto (Sebastián agregó a `goost01`), todo subido a `https://github.com/sperezm-create/GedeNaz.git` (rama `main`).
 - ✅ Entorno de desarrollo del **backend** montado: `venv/` con Python 3.14.5, dependencias instaladas (`Flask`, `mysql-connector-python`, `python-dotenv`, `pytest`), tests de humo pasando.
 - ⚠️ **Corrección de alcance**: el equipo definió que la app es **Android**, no de escritorio (el informe entregado hoy decía "escritorio" — ver nota arriba). Se sacó todo el código de Tkinter (`src/gedenaz/ui/`, `main.py` viejo) y se armó en su lugar el esqueleto de una API Flask (`src/gedenaz/api/`, `app.py`) que es lo que la futura app Android va a consumir. Detalle completo en [`BITACORA.md`](BITACORA.md).
-- ✅ Se evaluó dónde alojar MySQL gratis (Render, Aiven, db4free.net, PlanetScale, Railway) y se confirmó **PythonAnywhere**. Se dejó la guía paso a paso y el esquema adaptado (`src/gedenaz/data/schema_pythonanywhere.sql`) listos para ejecutar.
+- ⚠️ **Corrección de hosting (mismo día)**: se había documentado y recomendado PythonAnywhere, pero al intentar usarlo se confirmó que MySQL pasó a ser de pago ahí desde enero de 2026 (y sus cuentas gratis no pueden conectarse a bases externas tampoco). Se reemplazó por **Aiven** (MySQL) + **Render** (backend), verificado por web. Detalle en [`BITACORA.md`](BITACORA.md).
+- ✅ Se dejó la guía paso a paso para Aiven y el esquema adaptado (`src/gedenaz/data/schema_cloud.sql`) listos para ejecutar. `config.py` ya soporta SSL (`DB_SSL_CA`), que Aiven exige.
 - ⏳ **Pendiente y bloqueante para el resto del equipo**: elegir el framework de la app Android (ver `mobile/README.md`).
-- ⏳ Falta ejecutar la guía de PythonAnywhere de verdad (crear la cuenta, la base, correr el esquema) — son pasos manuales en su web, quedaron documentados pero no ejecutados todavía.
+- ⏳ Falta ejecutar de verdad los pasos en Aiven (crear cuenta, servicio MySQL, correr el esquema) y luego desplegar la API en Render — son pasos manuales en la web de cada proveedor, quedaron documentados pero no ejecutados todavía.
 - ⏳ Nada de código de los endpoints CRUD reales todavía (solo un `/health` de prueba) — eso empieza en la Fase 1 (tarea 1.2 en adelante, ver plan de trabajo).
 
 ## Próximos pasos
 
-1. Ejecutar la guía de PythonAnywhere ([`specs/05-entorno-desarrollo.md`](specs/05-entorno-desarrollo.md), sección 8): crear cuenta, crear la base `gedenaz`, correr `schema_pythonanywhere.sql`.
+1. Ejecutar la guía de Aiven ([`specs/05-entorno-desarrollo.md`](specs/05-entorno-desarrollo.md), sección 8): crear cuenta, crear el servicio MySQL, correr `schema_cloud.sql`.
 2. **Decidir el framework de la app Android** (todo el equipo) — ver `mobile/README.md`.
-3. Tarea 1.3 (Francisco): capa de conexión Python–MySQL dentro de la API, apuntando a la base ya en PythonAnywhere.
-4. Tarea 1.4 (Sebastian): primera pantalla Android "Crear producto" (depende del punto 2).
+3. Tarea 1.3 (Francisco): capa de conexión Python–MySQL dentro de la API, apuntando a la base ya en Aiven.
+4. Desplegar el backend Flask en Render (pendiente de agendar).
+5. Tarea 1.4 (Sebastian): primera pantalla Android "Crear producto" (depende del punto 2).
 
 Cronograma completo con fechas: [`specs/04-plan-de-trabajo.md`](specs/04-plan-de-trabajo.md).
 

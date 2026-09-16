@@ -1,16 +1,14 @@
--- Variante de schema.sql para pegar en la consola MySQL de PythonAnywhere.
+-- Variante de schema.sql para hosts MySQL gestionados donde la base ya
+-- viene creada (o se crea desde la consola web del proveedor, no por SQL).
 -- Fuente de verdad: docs/specs/02-modelo-de-datos.md (actualizar ahi primero).
 --
--- Diferencia con schema.sql: en el plan gratis de PythonAnywhere la base de
--- datos NO se crea con CREATE DATABASE por SQL -- se crea desde el boton
--- "New database" del panel (pestana Databases), y su nombre queda prefijado
--- con tu usuario (ej. "tuusuario$gedenaz"). Este archivo asume que esa base
--- ya existe y que la consola MySQL ya esta "parada" adentro de ella (asi
--- abre por defecto la consola de PythonAnywhere), por eso no lleva
--- CREATE DATABASE ni USE.
+-- Usar este archivo con: Aiven (crear la base "gedenaz" desde Console >
+-- Databases > Create database, o usar la base por defecto "defaultdb" que
+-- ya viene creada). No lleva CREATE DATABASE ni USE -- pegar esto ya parado
+-- adentro de la base correspondiente.
 --
 -- Ver docs/specs/05-entorno-desarrollo.md, seccion "Desplegar la base de
--- datos en PythonAnywhere" para el paso a paso completo.
+-- datos en Aiven" para el paso a paso completo.
 
 CREATE TABLE IF NOT EXISTS producto (
     id                   INT AUTO_INCREMENT PRIMARY KEY,

@@ -35,7 +35,8 @@ La app nunca ve una contraseña de MySQL; solo llama endpoints HTTP (`GET /produ
 | Base de datos | MySQL Server | Definido en informe, confirmado por el equipo tras evaluar alternativas (2026-09-09) |
 | Administración BD | MySQL Workbench | Definido en informe |
 | Conector Python↔MySQL | `mysql-connector-python` (conector oficial) | Solo lo usa la API, nunca la app |
-| Hosting gratuito sugerido | PythonAnywhere (tier gratis: API + MySQL juntos, sin tarjeta) | Ver conversación 2026-09-09 en la bitácora; alternativas: Aiven (MySQL "always free"), db4free.net |
+| Hosting de MySQL | **Aiven** (plan Free: 1GB, sin tarjeta) | PythonAnywhere se descartó (2026-09-16): desde enero 2026 MySQL solo está en sus planes pagos, y sus cuentas gratuitas ni siquiera pueden conectarse a una base externa. Ver bitácora. |
+| Hosting del backend (Flask) | **Render** (free tier: 750h/mes, sin tarjeta) — pendiente de desplegar | Se descartó Render solo-Postgres como base de datos, pero sí sirve para alojar el Flask conectado a Aiven por fuera |
 | IDE (backend) | Visual Studio Code | Definido en informe |
 | IDE (app Android) | Por definir junto con el framework | Android Studio si es Kotlin nativo; distinto si es Flutter/Kivy |
 | Control de versiones | Git / GitHub | Definido en informe |

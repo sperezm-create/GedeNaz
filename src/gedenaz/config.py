@@ -20,6 +20,7 @@ class DBConfig:
     user: str
     password: str
     database: str
+    ssl_ca: str | None = None  # ruta al certificado CA (obligatorio en Aiven)
 
 
 def get_db_config() -> DBConfig:
@@ -29,4 +30,5 @@ def get_db_config() -> DBConfig:
         user=os.getenv("DB_USER", ""),
         password=os.getenv("DB_PASSWORD", ""),
         database=os.getenv("DB_NAME", "gedenaz"),
+        ssl_ca=os.getenv("DB_SSL_CA") or None,
     )
