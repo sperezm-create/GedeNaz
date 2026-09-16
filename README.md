@@ -26,7 +26,8 @@ Este proyecto se desarrolla en modalidad **spec-first**: antes de programar un c
 python -m venv venv
 # Windows: .\venv\Scripts\Activate.ps1   |   macOS/Linux: source venv/bin/activate
 pip install -r requirements.txt
-cp .env.example .env   # y completar credenciales de MySQL
+pip install -e .       # instala gedenaz en modo editable, necesario para correr main.py
+cp .env.example .env   # y completar credenciales de MySQL (ver 05-entorno-desarrollo.md, sección 8, para Aiven)
 pytest
 python src/gedenaz/main.py   # levanta la API Flask en http://127.0.0.1:5000
 ```

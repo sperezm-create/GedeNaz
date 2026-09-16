@@ -37,7 +37,10 @@ source venv/bin/activate
 
 ```bash
 pip install -r requirements.txt
+pip install -e .
 ```
+
+El segundo comando instala el propio paquete `gedenaz` (carpeta `src/gedenaz/`) en modo editable — sin esto, `python src/gedenaz/main.py` falla con `ModuleNotFoundError: No module named 'gedenaz'` (problema clásico de la estructura `src/`; se probó y se confirmó en la sesión del 2026-09-16, ver bitácora).
 
 Dependencias del proyecto ([03-arquitectura.md](03-arquitectura.md)):
 
@@ -80,6 +83,8 @@ Debería levantar un servidor Flask local (por defecto en `http://127.0.0.1:5000
 ```bash
 curl http://127.0.0.1:5000/health
 ```
+
+Una vez que tu `.env` apunte a una base real (sección 8 más abajo), también existe `GET /health/db`, que intenta conectarse a MySQL y confirma si la conexión (incluyendo SSL) está funcionando.
 
 ## 8. Desplegar la base de datos en Aiven
 

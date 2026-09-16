@@ -4,6 +4,24 @@
 
 ---
 
+## 2026-09-16 (cont. 3) — Tarea 1.3: capa de conexión Python–MySQL
+
+Con la base ya lista en Aiven, se avanzó la tarea 1.3 de la Carta Gantt (asignada a Francisco, pero se siguió trabajando en conjunto para no perder impulso).
+
+**Qué se agregó:**
+
+- `src/gedenaz/data/db.py`: `get_connection()` y `connection_scope()` (context manager) — abren una conexión a MySQL usando `config.get_db_config()`, agregando `ssl_verify_cert=True` automáticamente cuando hay `ssl_ca` configurado (evita el error "Invalid ssl-mode" de la sesión anterior).
+- `GET /health/db` en la API (`app.py`): intenta conectarse a MySQL y devuelve `ok`/`error` — sirve para confirmar la conexión real por HTTP, útil también una vez desplegado en Render.
+- `tests/data/test_db.py` y `tests/test_environment.py::test_api_health_db`: prueban la conexión real. Se saltan solos (`pytest.mark.skipif`) si no hay `DB_PASSWORD` en el entorno, para no romper el setup de alguien que todavía no tiene su propio `.env` con Aiven.
+
+**Bug encontrado y arreglado al probar de punta a punta**: `python src/gedenaz/main.py` (el comando ya documentado desde la tarea 1.1) fallaba con `ModuleNotFoundError: No module named 'gedenaz'` — problema clásico de la estructura `src/` sin el paquete instalado. Se agregó `pyproject.toml` (setuptools, `where = ["src"]`) y se sumó `pip install -e .` al paso de instalación de dependencias en `05-entorno-desarrollo.md`. **Cada integrante necesita correr `pip install -e .` una vez** además de `pip install -r requirements.txt` (o va a fallar al intentar correr la API).
+
+**Verificado end-to-end**: se levantó la API local (`python src/gedenaz/main.py`) y se confirmó con `curl` que tanto `/health` como `/health/db` responden `200 {"status": "ok"}` — la cadena completa `API local → SSL → Aiven` funciona.
+
+**Los 6 tests pasan** (`pytest`, incluye los 2 nuevos de conexión real).
+
+---
+
 ## 2026-09-16 (cont. 2) — Base de datos Aiven creada y esquema aplicado
 
 Nicolas creó la cuenta de Aiven y el servicio `mysql-gedenaz-bd` (plan Free). Dos problemas al conectar, ambos resueltos:

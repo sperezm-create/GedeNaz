@@ -54,6 +54,7 @@ Proyecto/
 │   └── specs/                  # Especificaciones (spec-first) — este directorio
 ├── mobile/                     # App Android — framework pendiente de decisión del equipo
 │   └── README.md               # Placeholder: qué falta decidir antes de empezar acá
+├── scripts/                    # Utilidades de desarrollo (ej. apply_schema.py)
 ├── src/
 │   └── gedenaz/                # Backend (API) — lo único que este repo implementa hoy
 │       ├── __init__.py
@@ -66,6 +67,7 @@ Proyecto/
 ├── tests/                      # Pruebas con pytest, en espejo de src/gedenaz
 ├── .env.example                # Plantilla de variables de entorno (sin credenciales reales)
 ├── .gitignore
+├── pyproject.toml              # Declara el paquete gedenaz para poder instalarlo con `pip install -e .`
 ├── requirements.txt
 ├── README.md
 └── venv/                       # Entorno virtual local (no versionado)
@@ -75,6 +77,6 @@ Proyecto/
 
 - `api/` solo traduce HTTP↔Python: recibe la request, llama a `logic/`, devuelve JSON. No contiene SQL ni reglas de negocio.
 - `logic/` contiene las validaciones de [01-requisitos-funcionales.md](01-requisitos-funcionales.md) (campos obligatorios, tipos de dato, stock no negativo, etc.) y orquesta llamadas a `data/`. No importa nada de `flask` — se puede probar con `pytest` sin levantar un servidor HTTP.
-- `data/` es la única capa que habla con MySQL (usa `mysql-connector-python`); expone funciones tipo repositorio (`crear_producto`, `listar_productos`, `actualizar_producto`, `eliminar_producto`) que reflejan el esquema de [02-modelo-de-datos.md](02-modelo-de-datos.md).
+- `data/` es la única capa que habla con MySQL (usa `mysql-connector-python`); expone funciones tipo repositorio (`crear_producto`, `listar_productos`, `actualizar_producto`, `eliminar_producto`) que reflejan el esquema de [02-modelo-de-datos.md](02-modelo-de-datos.md). **Ya implementado** (2026-09-16, tarea 1.3): `data/db.py` con `get_connection()`/`connection_scope()`, que abren la conexión a MySQL (con SSL para Aiven) — las funciones de repositorio en sí (`crear_producto`, etc.) todavía no existen, se construyen sobre esta conexión en las tareas 1.5 en adelante.
 
 Esta separación es la misma que ya existía en la versión de escritorio, solo que `ui/` (Tkinter) se reemplazó por `api/` (Flask) — `logic/` y `data/` no cambiaron de lugar ni de responsabilidad.
