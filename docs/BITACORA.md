@@ -4,6 +4,27 @@
 
 ---
 
+## 2026-09-16 — SQL vs NoSQL, evaluación de Render, y guía de despliegue en PythonAnywhere
+
+**Contexto**: Nicolas preguntó si el modelo de datos SQL serviría para Firebase (NoSQL) a futuro, lo que llevó a una conversación más amplia sobre SQL vs NoSQL para este proyecto.
+
+**SQL vs NoSQL**: se recomendó quedarse con MySQL (SQL) en vez de pasarse a Firebase/Firestore (NoSQL), por: (1) el informe ya entregado compromete MySQL por escrito — cambiarlo de nuevo (ya se corrigió escritorio→Android una vez) suma riesgo frente a la rúbrica; (2) el modelo es una sola tabla simple, no hay ventaja real de NoSQL acá; (3) ya se invirtió el trabajo de esta semana en Flask+MySQL; (4) el objetivo de centralización se logra igual con cualquiera de las dos. Se dejó explícito que si el motivo real hubiera sido "no queremos mantener un backend", Firebase sí tendría una ventaja concreta (SDK Android nativo, sin necesidad de Flask) — pero el equipo decidió seguir con MySQL.
+
+**Se evaluó Render.com** (verificado por web): no ofrece MySQL gestionado, solo PostgreSQL (y con límite de 30 días en el plan gratis). Podría servir solo para alojar el Flask (tier gratis, 750h/mes, sin tarjeta), pero la app "duerme" tras 15 min sin uso — mal síntoma para el uso real de la tienda. Se descartó frente a PythonAnywhere.
+
+**Decisión confirmada**: hosting en **PythonAnywhere** (API Flask + MySQL juntos, gratis, sin tarjeta).
+
+**Qué se hizo en el repo:**
+
+- `src/gedenaz/data/schema_pythonanywhere.sql` — variante del esquema sin `CREATE DATABASE`/`USE` (en PythonAnywhere la base se crea desde su panel web, con nombre prefijado por el usuario, ej. `tuusuario$gedenaz`).
+- `docs/specs/05-entorno-desarrollo.md` — nueva sección 8 "Desplegar la base de datos en PythonAnywhere", paso a paso completo (crear cuenta, crear base, correr el esquema, configurar `.env`).
+- `.env.example` — comentario explicando el formato de `DB_HOST`/`DB_USER`/`DB_NAME` cuando la base vive en PythonAnywhere.
+- `docs/MEMORIA_PROYECTO.md` actualizado.
+
+**Pendiente**: los pasos de la sección 8 son manuales (crear cuenta, usar el panel de PythonAnywhere) — quedaron documentados pero **no ejecutados todavía**. Alguien del equipo tiene que efectivamente crear la cuenta y correr el esquema.
+
+---
+
 ## 2026-09-09 (cont. 2) — Corrección de alcance: la app es Android, no de escritorio
 
 Nicolas avisó que la app **no es de escritorio, es una app móvil para Android** — contradice lo que dice el informe ya entregado hoy (H1). Se conversó con el equipo (Nicolas hizo de puente) sobre cómo conectar a MySQL desde una app móvil, porque conectar el teléfono directo a MySQL no es seguro (credenciales dentro del APK, puerto expuesto a internet).

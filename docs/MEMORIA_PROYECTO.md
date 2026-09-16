@@ -4,7 +4,7 @@
 >
 > **Cómo se mantiene**: este documento se **reescribe/actualiza en el sitio** cada vez que cambia algo importante (no se acumulan versiones viejas acá). El historial detallado de qué se hizo sesión a sesión vive en [`BITACORA.md`](BITACORA.md) — ese sí es un registro cronológico que solo crece.
 >
-> **Última actualización**: 2026-09-09.
+> **Última actualización**: 2026-09-16.
 
 ## En una frase
 
@@ -36,24 +36,26 @@ Detalle completo con criterios de aceptación: [`specs/01-requisitos-funcionales
 - **Cliente**: app Android. **Framework todavía sin decidir** (Kotlin / Flutter / Python+Kivy) — el equipo lo está conversando.
 - **Datos**: se mantiene **MySQL** (el equipo lo confirmó tras evaluar alternativas locales/SQLite), pero la app **nunca** se conecta directo a la base — no es seguro guardar credenciales de MySQL dentro de un APK.
 - **Arquitectura**: por eso hay una API en el medio — `App Android → API (Flask) → MySQL`. Dentro de la API: `api/` (endpoints HTTP) → `logic/` (reglas de negocio/validaciones) → `data/` (acceso a MySQL). Ver [`specs/03-arquitectura.md`](specs/03-arquitectura.md) para el detalle y el porqué.
-- **Hosting gratuito sugerido**: PythonAnywhere (API + MySQL juntos, sin costo, sin tarjeta). Alternativas si hace falta: Aiven, db4free.net. Se evitan PlanetScale/Railway por no ser gratis de forma sostenida.
+- **Hosting**: **PythonAnywhere** (decisión confirmada 2026-09-16) — API + MySQL juntos, sin costo, sin tarjeta. Se evaluaron Render (no soporta MySQL, solo Postgres), Aiven, db4free.net, PlanetScale y Railway (estas dos últimas descartadas por no ser gratis de forma sostenida). Guía paso a paso para montar la base ahí: [`specs/05-entorno-desarrollo.md`](specs/05-entorno-desarrollo.md#8-desplegar-la-base-de-datos-en-pythonanywhere).
 - **Base de datos**: una sola tabla relevante por ahora, `producto` (ver [`specs/02-modelo-de-datos.md`](specs/02-modelo-de-datos.md)) — el esquema no cambió por el paso a Android.
 
-## Estado actual (2026-09-09)
+## Estado actual (2026-09-16)
 
 - ✅ Specs escritas en `docs/specs/` (visión, requisitos, modelo de datos, arquitectura, plan de trabajo, entorno).
 - ✅ Repo Git local inicializado, con commit inicial + merge con el repo remoto del equipo. Acceso a GitHub resuelto (Sebastián agregó a `goost01`), todo subido a `https://github.com/sperezm-create/GedeNaz.git` (rama `main`).
 - ✅ Entorno de desarrollo del **backend** montado: `venv/` con Python 3.14.5, dependencias instaladas (`Flask`, `mysql-connector-python`, `python-dotenv`, `pytest`), tests de humo pasando.
 - ⚠️ **Corrección de alcance**: el equipo definió que la app es **Android**, no de escritorio (el informe entregado hoy decía "escritorio" — ver nota arriba). Se sacó todo el código de Tkinter (`src/gedenaz/ui/`, `main.py` viejo) y se armó en su lugar el esqueleto de una API Flask (`src/gedenaz/api/`, `app.py`) que es lo que la futura app Android va a consumir. Detalle completo en [`BITACORA.md`](BITACORA.md).
+- ✅ Se evaluó dónde alojar MySQL gratis (Render, Aiven, db4free.net, PlanetScale, Railway) y se confirmó **PythonAnywhere**. Se dejó la guía paso a paso y el esquema adaptado (`src/gedenaz/data/schema_pythonanywhere.sql`) listos para ejecutar.
 - ⏳ **Pendiente y bloqueante para el resto del equipo**: elegir el framework de la app Android (ver `mobile/README.md`).
+- ⏳ Falta ejecutar la guía de PythonAnywhere de verdad (crear la cuenta, la base, correr el esquema) — son pasos manuales en su web, quedaron documentados pero no ejecutados todavía.
 - ⏳ Nada de código de los endpoints CRUD reales todavía (solo un `/health` de prueba) — eso empieza en la Fase 1 (tarea 1.2 en adelante, ver plan de trabajo).
 
 ## Próximos pasos
 
-1. **Decidir el framework de la app Android** (todo el equipo) — ver `mobile/README.md`.
-2. Tarea 1.2 (Francisco): instalar MySQL (local o en el hosting gratuito elegido), crear BD `gedenaz` con `src/gedenaz/data/schema.sql`.
-3. Tarea 1.3 (Francisco): capa de conexión Python–MySQL dentro de la API.
-4. Tarea 1.4 (Sebastian): primera pantalla Android "Crear producto" (depende del punto 1).
+1. Ejecutar la guía de PythonAnywhere ([`specs/05-entorno-desarrollo.md`](specs/05-entorno-desarrollo.md), sección 8): crear cuenta, crear la base `gedenaz`, correr `schema_pythonanywhere.sql`.
+2. **Decidir el framework de la app Android** (todo el equipo) — ver `mobile/README.md`.
+3. Tarea 1.3 (Francisco): capa de conexión Python–MySQL dentro de la API, apuntando a la base ya en PythonAnywhere.
+4. Tarea 1.4 (Sebastian): primera pantalla Android "Crear producto" (depende del punto 2).
 
 Cronograma completo con fechas: [`specs/04-plan-de-trabajo.md`](specs/04-plan-de-trabajo.md).
 

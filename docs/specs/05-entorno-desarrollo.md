@@ -81,6 +81,35 @@ Debería levantar un servidor Flask local (por defecto en `http://127.0.0.1:5000
 curl http://127.0.0.1:5000/health
 ```
 
+## 8. Desplegar la base de datos en PythonAnywhere
+
+> Decisión de equipo (2026-09-16): hosting gratuito para MySQL + backend, ver [03-arquitectura.md](03-arquitectura.md). Esta sección la ejecuta cada quien con **su propia cuenta** (no se comparte una sola cuenta de PythonAnywhere entre el equipo, salvo que decidan lo contrario) — son pasos manuales en su web, no se pueden automatizar desde acá.
+
+1. Crear una cuenta gratuita en [pythonanywhere.com](https://www.pythonanywhere.com) — plan **"Beginner"** (gratis, sin tarjeta).
+2. En el dashboard, ir a la pestaña **Databases**. La primera vez va a pedir definir una **contraseña de MySQL** — esa contraseña es la de la base, guárdala (va a tu `.env`, nunca al repo).
+3. En esa misma pestaña, en **"Create a database"**, escribir `gedenaz`. PythonAnywhere la crea como `<tu_usuario>$gedenaz` (el plan gratis solo permite **una** base de datos por cuenta, y siempre queda prefijada con tu usuario — no hay forma de evitarlo).
+4. Abrir la **consola MySQL** que aparece en esa misma página (o una "Bash console" y correr `mysql -u <tu_usuario> -h <tu_usuario>.mysql.pythonanywhere-services.com '<tu_usuario>$gedenaz' -p`). Ya vas a estar parado dentro de tu base.
+5. Pegar el contenido de [`src/gedenaz/data/schema_pythonanywhere.sql`](../../src/gedenaz/data/schema_pythonanywhere.sql) (esta variante, **no** `schema.sql` — no lleva `CREATE DATABASE`/`USE` porque la base ya existe y tiene nombre prefijado).
+6. Completar tu `.env` local con los datos que te dio PythonAnywhere:
+
+   ```env
+   DB_HOST=<tu_usuario>.mysql.pythonanywhere-services.com
+   DB_PORT=3306
+   DB_USER=<tu_usuario>
+   DB_PASSWORD=<la contraseña que definiste en el paso 2>
+   DB_NAME=<tu_usuario>$gedenaz
+   ```
+
+7. Verificar la conexión corriendo la API local apuntando a la base en la nube:
+
+   ```bash
+   python src/gedenaz/main.py
+   ```
+
+   Si `main.py` ya tiene un endpoint que consulta la base (ej. `GET /productos`), probarlo con `curl` o el navegador. Si todavía no existe ese endpoint, alcanza con que la app no tire error de conexión al arrancar.
+
+**Nota**: esto deja la base accesible en la nube, pero el *backend* (la API Flask) todavía puede seguir corriendo en tu máquina mientras desarrollan (apuntando a esta base remota). Desplegar también la API Flask **dentro** de PythonAnywhere (para que Gedalias y Nazareth la usen sin que alguien tenga el compu prendido) es un paso aparte, pendiente de agendar en el plan de trabajo.
+
 ## Entorno del cliente móvil (Android) — pendiente
 
 El equipo confirmó que la app es para Android pero **todavía no eligió el framework** (Kotlin nativo, Flutter, Python+Kivy, etc.). Cuando se decida:

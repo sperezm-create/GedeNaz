@@ -1,4 +1,12 @@
--- Esquema MySQL de GedeNaz App.
+-- Esquema MySQL de GedeNaz App (para un MySQL propio, con permisos para
+-- crear bases de datos -- ej. MySQL local o un servidor donde uno mismo
+-- administra la base).
+--
+-- Si van a usar PythonAnywhere (hosting gratis recomendado, ver
+-- docs/specs/05-entorno-desarrollo.md), usen schema_pythonanywhere.sql en
+-- su lugar: ahi el nombre de la base lo asigna PythonAnywhere y no se puede
+-- correr CREATE DATABASE por SQL.
+--
 -- Fuente de verdad: docs/specs/02-modelo-de-datos.md (actualizar ahi primero).
 -- Tarea 1.2 de la Carta Gantt (responsable: Francisco Jara).
 
