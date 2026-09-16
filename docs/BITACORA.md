@@ -4,6 +4,19 @@
 
 ---
 
+## 2026-09-16 (cont. 2) — Base de datos Aiven creada y esquema aplicado
+
+Nicolas creó la cuenta de Aiven y el servicio `mysql-gedenaz-bd` (plan Free). Dos problemas al conectar, ambos resueltos:
+
+1. **"Invalid ssl-mode"** al conectar con MySQL Workbench dando el certificado CA sin pedir verificación. Arreglo: pestaña SSL de la conexión → "Use SSL" = "Require and Verify CA". Se documentó en `05-entorno-desarrollo.md` y se dejó un comentario en `config.py` (campo `ssl_ca`) para que a Francisco no le pase lo mismo al programar la conexión en Python (hay que pasar `ssl_verify_cert=True` junto con `ssl_ca`).
+2. **Workbench se quedó colgado en "Starting editor session"** (bug conocido de Workbench contra bases remotas, no es un problema de la conexión en sí). En vez de pelear con la UI, se armó `scripts/apply_schema.py` — un script chico que usa `mysql-connector-python` (ya instalado) para correr cualquier archivo `.sql` contra la base del `.env`. Se usó para aplicar `schema_cloud.sql` a Aiven, confirmado con éxito y verificado con `DESCRIBE producto` (todas las columnas, tipos, defaults e índices tal como en el spec).
+
+**Estado**: la base `gedenaz` en Aiven ya tiene la tabla `producto` lista para usarse. El `.env` local de Nicolas ya está completo y probado.
+
+**Nota técnica para quien programe la capa de datos (tarea 1.3, Francisco)**: al conectar con `mysql-connector-python`, si `DBConfig.ssl_ca` no es `None`, pasar también `ssl_verify_cert=True` a `mysql.connector.connect(...)` — si no, tira el mismo error "Invalid ssl-mode" que dio Workbench.
+
+---
+
 ## 2026-09-16 (cont.) — PythonAnywhere descartado: MySQL ya no está en el plan gratis
 
 Nicolas fue a ejecutar la guía de PythonAnywhere y el panel le avisó que MySQL no está disponible en cuentas gratis. Se verificó por web: **PythonAnywhere movió el acceso a MySQL (y las tareas programadas) a sus planes pagos desde enero de 2026** (cuentas gratis creadas antes del 15-01-2026 conservan el acceso, las nuevas no). Además, se confirmó que las cuentas gratuitas de PythonAnywhere **no pueden conectarse a ninguna base de datos externa** (solo HTTP/HTTPS a una lista blanca de sitios, ningún otro protocolo) — así que tampoco servía como "solo hosting del backend" apuntando a MySQL en otro lado.

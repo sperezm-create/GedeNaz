@@ -48,16 +48,16 @@ Detalle completo con criterios de aceptación: [`specs/01-requisitos-funcionales
 - ⚠️ **Corrección de hosting (mismo día)**: se había documentado y recomendado PythonAnywhere, pero al intentar usarlo se confirmó que MySQL pasó a ser de pago ahí desde enero de 2026 (y sus cuentas gratis no pueden conectarse a bases externas tampoco). Se reemplazó por **Aiven** (MySQL) + **Render** (backend), verificado por web. Detalle en [`BITACORA.md`](BITACORA.md).
 - ✅ Se dejó la guía paso a paso para Aiven y el esquema adaptado (`src/gedenaz/data/schema_cloud.sql`) listos para ejecutar. `config.py` ya soporta SSL (`DB_SSL_CA`), que Aiven exige.
 - ⏳ **Pendiente y bloqueante para el resto del equipo**: elegir el framework de la app Android (ver `mobile/README.md`).
-- ⏳ Falta ejecutar de verdad los pasos en Aiven (crear cuenta, servicio MySQL, correr el esquema) y luego desplegar la API en Render — son pasos manuales en la web de cada proveedor, quedaron documentados pero no ejecutados todavía.
+- ✅ **Base de datos en la nube lista**: servicio `mysql-gedenaz-bd` creado en Aiven, tabla `producto` aplicada y verificada (con `scripts/apply_schema.py`, útil porque MySQL Workbench se cuelga contra bases remotas — bug conocido). El `.env` de Nicolas ya está completo y probado end-to-end contra Aiven.
+- ⏳ Falta desplegar la API Flask en Render (por ahora la API solo se corre local, apuntando a la base ya en Aiven).
 - ⏳ Nada de código de los endpoints CRUD reales todavía (solo un `/health` de prueba) — eso empieza en la Fase 1 (tarea 1.2 en adelante, ver plan de trabajo).
 
 ## Próximos pasos
 
-1. Ejecutar la guía de Aiven ([`specs/05-entorno-desarrollo.md`](specs/05-entorno-desarrollo.md), sección 8): crear cuenta, crear el servicio MySQL, correr `schema_cloud.sql`.
-2. **Decidir el framework de la app Android** (todo el equipo) — ver `mobile/README.md`.
-3. Tarea 1.3 (Francisco): capa de conexión Python–MySQL dentro de la API, apuntando a la base ya en Aiven.
-4. Desplegar el backend Flask en Render (pendiente de agendar).
-5. Tarea 1.4 (Sebastian): primera pantalla Android "Crear producto" (depende del punto 2).
+1. **Decidir el framework de la app Android** (todo el equipo) — ver `mobile/README.md`.
+2. Tarea 1.3 (Francisco): capa de conexión Python–MySQL dentro de la API, apuntando a la base ya en Aiven (ojo con `ssl_verify_cert=True`, ver bitácora).
+3. Desplegar el backend Flask en Render (pendiente de agendar).
+4. Tarea 1.4 (Sebastian): primera pantalla Android "Crear producto" (depende del punto 1).
 
 Cronograma completo con fechas: [`specs/04-plan-de-trabajo.md`](specs/04-plan-de-trabajo.md).
 
@@ -69,6 +69,7 @@ docs/
   BITACORA.md           ← registro cronológico de sesiones (solo crece)
   specs/                ← especificaciones spec-first (00 a 05)
 mobile/                  ← app Android (framework pendiente de decisión)
+scripts/                 ← utilidades (ej. apply_schema.py — correr un .sql contra la base del .env)
 src/gedenaz/             ← backend / API (api / logic / data)
 tests/                   ← pruebas pytest
 requirements.txt, .env.example, .gitignore, README.md

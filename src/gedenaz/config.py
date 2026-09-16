@@ -20,7 +20,12 @@ class DBConfig:
     user: str
     password: str
     database: str
-    ssl_ca: str | None = None  # ruta al certificado CA (obligatorio en Aiven)
+    # Ruta al certificado CA (obligatorio en Aiven). Ojo al usarlo con
+    # mysql-connector-python: si se pasa ssl_ca, hay que pasar TAMBIEN
+    # ssl_verify_cert=True (o ssl-mode='VERIFY_CA'/'VERIFY_IDENTITY'),
+    # si no tira "Invalid ssl-mode" -- mismo error que da MySQL Workbench
+    # si el "Use SSL" no se pone en "Require and Verify CA".
+    ssl_ca: str | None = None
 
 
 def get_db_config() -> DBConfig:

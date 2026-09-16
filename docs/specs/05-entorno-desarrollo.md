@@ -107,6 +107,10 @@ Esta sección la ejecuta cada quien con **su propia cuenta** — son pasos manua
 
 **Importante — inactividad**: el plan gratis de Aiven **apaga el servicio automáticamente tras un período de inactividad** (avisan antes por correo). Si lo dejan quieto varias semanas (ej. entre avances de la Carta Gantt), puede que haya que volver a encenderlo manualmente desde la consola de Aiven antes de una demo o entrega.
 
+**Error común — "Invalid ssl-mode"**: si al conectar (Workbench o `mysql-connector-python`) sale `Invalid ssl-mode, value should be either 'verify_ca' or 'verify_identity' when any of 'ssl-ca'... are provided`, es porque diste un certificado CA sin pedirle al cliente que lo use para verificar. Arreglo:
+- **MySQL Workbench**: en la conexión → pestaña **SSL** → cambiar "Use SSL" de "If available" a **"Require and Verify CA"**.
+- **mysql-connector-python**: pasar `ssl_verify_cert=True` junto con `ssl_ca` al conectar (ver comentario en `config.py`, campo `ssl_ca`).
+
 ### Backend (Flask) en Render — pendiente de ejecutar
 
 La base ya queda accesible en la nube con lo anterior, pero eso no aloja la API Flask en ningún lado — mientras desarrollan, cada uno la sigue corriendo en su propia máquina apuntando a Aiven. Para que Gedalias y Nazareth puedan usarla sin que alguien tenga el computador prendido, falta desplegar la API en **Render** (free tier, 750h/mes, sin tarjeta — ver [03-arquitectura.md](03-arquitectura.md)). Queda pendiente de agendar en el plan de trabajo; cuando se haga, documentar acá los pasos igual que para Aiven.
