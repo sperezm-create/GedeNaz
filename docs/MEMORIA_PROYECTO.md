@@ -51,14 +51,14 @@ Detalle completo con criterios de aceptación: [`specs/01-requisitos-funcionales
 - ✅ **Base de datos en la nube lista**: servicio `mysql-gedenaz-bd` creado en Aiven, tabla `producto` aplicada y verificada (con `scripts/apply_schema.py`, útil porque MySQL Workbench se cuelga contra bases remotas — bug conocido). El `.env` de Nicolas ya está completo y probado end-to-end contra Aiven.
 - ✅ **Tarea 1.3 avanzada**: capa de conexión Python–MySQL (`src/gedenaz/data/db.py`) + endpoint `GET /health/db`. Se encontró y arregló un bug real (`pyproject.toml` + `pip install -e .`, sin eso `python src/gedenaz/main.py` no corre).
 - ✅ **RF1 completo en el backend** (tareas 1.5 y 1.6): `POST /productos` crea un producto validado (nombre/categoría obligatorios, precio > 0, stock ≥ 0) y lo guarda en Aiven. Probado con `pytest` (21 tests) y manualmente con `curl`, de punta a punta. Ver [`BITACORA.md`](BITACORA.md) para el detalle de las 3 capas.
-- ✅ **Guía de despliegue en Render lista** ([`specs/05-entorno-desarrollo.md` § 9](specs/05-entorno-desarrollo.md#9-desplegar-el-backend-en-render)): build/start command, variables de entorno, certificado CA como "Secret File". Se agregó `gunicorn` a `requirements.txt` (el dev server de Flask no sirve para producción). **Falta ejecutarla** — son pasos manuales en la web de Render (crear cuenta, conectar el repo, configurar el servicio).
+- ✅ **Backend desplegado y funcionando en Render**: `https://gedenaz-api.onrender.com` — `/health`, `/health/db` y `POST /productos` probados en producción, responden bien. Como el repo no es de Nicolas (es de Sebastian) y es público, se usó "Public Git Repository" en vez de conectar GitHub (sin auto-deploy: hay que apretar "Manual Deploy" en Render después de cada push que quieran llevar a producción).
 - ⏳ RF2, RF3 y RF4 sin implementar todavía (`listar_productos`, `actualizar_producto`, `eliminar_producto`).
 
 ## Próximos pasos
 
-1. **Decidir el framework de la app Android** (todo el equipo) — ver `mobile/README.md`. Bloquea la tarea 1.4 (pantalla "Crear producto"), que ya tiene un endpoint real (`POST /productos`) esperándola.
-2. Desplegar el backend Flask en Render (pendiente de agendar).
-3. Avisarle a Francisco y Sebastian que las tareas 1.3, 1.5 y 1.6 ya quedaron avanzadas — revisar `src/gedenaz/{data,logic,api}/` antes de seguir.
+1. **Decidir el framework de la app Android** (todo el equipo) — ver `mobile/README.md`. Bloquea la tarea 1.4 (pantalla "Crear producto"), que ya tiene un endpoint real y en producción (`https://gedenaz-api.onrender.com/productos`) esperándola.
+2. Avisarle a Francisco y Sebastian que las tareas 1.3, 1.5 y 1.6 ya quedaron avanzadas (y desplegadas) — revisar `src/gedenaz/{data,logic,api}/` antes de seguir.
+3. **Recordatorio permanente**: el deploy en Render no es automático (repo público, sin conexión a GitHub) — después de cada push a `main` que quieran llevar a producción, hay que entrar al panel de Render y apretar "Manual Deploy".
 4. Cuando se retome el plan de trabajo: RF2 (Fase 2, listar/buscar productos).
 
 Cronograma completo con fechas: [`specs/04-plan-de-trabajo.md`](specs/04-plan-de-trabajo.md).

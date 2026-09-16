@@ -12,7 +12,7 @@ Usuario único del sistema: **administrador** (Gedalias / Nazareth), sin diferen
 
 **Como** administrador, **quiero** registrar un nuevo producto en el inventario **para** dejar de depender de anotaciones manuales.
 
-> ✅ **Backend implementado** (2026-09-16): `POST /productos` (`src/gedenaz/api/productos.py`), validaciones (`src/gedenaz/logic/productos.py`) y guardado en MySQL (`src/gedenaz/data/productos.py`), probado end-to-end contra Aiven. Falta la pantalla Android (tarea 1.4, depende del framework — ver `mobile/README.md`).
+> ✅ **Backend implementado y en producción** (2026-09-16): `POST /productos` (`src/gedenaz/api/productos.py`), validaciones (`src/gedenaz/logic/productos.py`) y guardado en MySQL (`src/gedenaz/data/productos.py`), probado end-to-end contra Aiven, incluido en `https://gedenaz-api.onrender.com/productos`. Falta la pantalla Android (tarea 1.4, depende del framework — ver `mobile/README.md`).
 
 **Entrada (formulario "Crear producto")**
 

@@ -4,6 +4,20 @@
 
 ---
 
+## 2026-09-16 (cont. 6) — Backend desplegado en Render, funcionando en producción
+
+Se ejecutó el despliegue preparado en la sesión anterior. Un problema en el camino:
+
+**El repo no es de Nicolas** (lo creó Sebastian) — al conectar GitHub, Render pedía permisos que un colaborador (no dueño) del repo no necesariamente tiene para instalar la app de GitHub. Se resolvió aprovechando que el repo `sperezm-create/GedeNaz` es **público** (confirmado vía API de GitHub): se usó la opción **"Public Git Repository"** de Render (pegar la URL del repo directo), que no requiere conectar ninguna cuenta de GitHub. Trade-off aceptado: sin auto-deploy en cada push, hay que apretar "Manual Deploy" a mano cuando quieran subir cambios nuevos — aceptable para un proyecto de curso.
+
+**Configuración usada**: Build Command `pip install -r requirements.txt && pip install -e .`, Start Command `gunicorn "gedenaz.app:create_app()"`, plan Free. Variables de entorno (`DB_HOST/PORT/USER/PASSWORD/NAME`) + el certificado CA subido como Secret File (`aiven-ca.pem`), con `DB_SSL_CA` apuntando a la ruta que Render mostró al montarlo.
+
+**Verificado en producción** (`https://gedenaz-api.onrender.com`): `/health` y `/health/db` responden `200`, y un `POST /productos` real creó un producto en Aiven (id 10, borrado después de la prueba) — confirma la cadena completa `Render → SSL → Aiven` funcionando.
+
+**Estado**: el backend (RF1 completo) ya está corriendo en producción, gratis, accesible por HTTPS desde cualquier lado (incluida la futura app Android).
+
+---
+
 ## 2026-09-16 (cont. 5) — Preparación para desplegar el backend en Render
 
 Se dejó todo listo para desplegar la API en Render (verificado por web: sintaxis de Gunicorn para app factory, y que Render tiene una sección "Secret Files" separada de las variables de entorno, justo para casos como el certificado CA de Aiven).

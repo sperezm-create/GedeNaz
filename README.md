@@ -4,6 +4,8 @@ Aplicación **Android** (framework por definir) + backend API en **Python** con 
 
 Este repositorio, por ahora, implementa el **backend**: la app Android en sí vive en [`mobile/`](mobile/) a la espera de que el equipo defina su framework.
 
+**Backend en producción**: [`https://gedenaz-api.onrender.com`](https://gedenaz-api.onrender.com) — sin auto-deploy, hay que hacer "Manual Deploy" desde el panel de Render después de cada push a `main` (ver [05-entorno-desarrollo.md § 9](docs/specs/05-entorno-desarrollo.md)).
+
 ## Memoria y bitácora
 
 - [`docs/MEMORIA_PROYECTO.md`](docs/MEMORIA_PROYECTO.md) — foto del estado actual del proyecto (léelo primero si vuelves después de un tiempo).
@@ -36,7 +38,7 @@ Detalle completo en [05-entorno-desarrollo.md](docs/specs/05-entorno-desarrollo.
 
 ## Stack
 
-Android (framework por definir) · Python 3.11+ · Flask · MySQL · `mysql-connector-python` · pytest · VS Code · Git/GitHub · Jira (Kanban).
+Android (framework por definir) · Python 3.11+ · Flask · `gunicorn` (producción) · MySQL (Aiven) · `mysql-connector-python` · Render (hosting backend) · pytest · VS Code · Git/GitHub · Jira (Kanban).
 
 ## Equipo
 

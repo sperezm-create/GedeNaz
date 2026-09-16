@@ -118,14 +118,17 @@ Esta sección la ejecuta cada quien con **su propia cuenta** — son pasos manua
 
 ## 9. Desplegar el backend en Render
 
+> ✅ **Ya desplegado** (2026-09-16): `https://gedenaz-api.onrender.com`. Esta sección queda como referencia para quien necesite repetir el proceso (ej. un segundo servicio, o si el actual se borra).
+
 > La base en Aiven ya queda accesible desde internet, pero mientras desarrollan la API Flask solo corre en la máquina de cada uno (`python src/gedenaz/main.py`). Para que Gedalias y Nazareth la usen sin que alguien tenga el computador prendido, se despliega en **Render** (free tier, 750h/mes, sin tarjeta — se descartó como hosting de MySQL porque no lo soporta, pero sí sirve para alojar el backend, ver [03-arquitectura.md](03-arquitectura.md)).
 
 Como el dev server de Flask (`app.run()`) **no es apto para producción** (lo dice la propia advertencia que tira al arrancar), en Render se usa **Gunicorn** en su lugar — ya está en `requirements.txt`.
 
-1. Crear una cuenta en [render.com](https://render.com) — lo más simple es entrar con **"Sign up with GitHub"**, así queda conectado de una.
-2. Dashboard → **New +** → **Web Service**.
-3. Conectar el repositorio `sperezm-create/GedeNaz` (Render pide autorización para acceder a tus repos de GitHub — la das solo para este repo si te deja elegir así).
-4. Configurar el servicio:
+**Importante — el repo no tiene por qué ser tuyo**: quien haga este despliegue probablemente no es el dueño del repo en GitHub (acá lo hizo Nicolas, dueño es Sebastian). Conectar Render directo a GitHub pide instalar su app con permisos de administrador sobre el repo, que un colaborador normal no necesariamente tiene. Como `sperezm-create/GedeNaz` es **público**, se evita todo esto usando la opción **"Public Git Repository"** (pegar la URL del repo, sin conectar ninguna cuenta de GitHub) en vez de "conectar GitHub". **Trade-off aceptado**: con este método **no hay auto-deploy** — después de cada push a `main` que quieran llevar a producción, hay que entrar al panel de Render y apretar **"Manual Deploy"** a mano. Si en algún momento el dueño del repo quiere auto-deploy, puede conectar su propia cuenta de GitHub (él sí tiene permisos de administrador sobre su propio repo).
+
+1. Crear una cuenta en [render.com](https://render.com) (no hace falta que sea con GitHub si van a usar "Public Git Repository" — ver nota arriba).
+2. Dashboard → **New +** → **Web Service** → buscar la opción **"Public Git Repository"** (junto al selector de repos conectados) → pegar `https://github.com/sperezm-create/GedeNaz`.
+3. Configurar el servicio:
    - **Name**: `gedenaz-api` (o lo que prefieran — define la URL pública, `<name>.onrender.com`)
    - **Region**: cualquiera (no hay región en Sudamérica; Oregon u otra por defecto está bien para un proyecto de curso)
    - **Branch**: `main`
@@ -140,17 +143,19 @@ Como el dev server de Flask (`app.run()`) **no es apto para producción** (lo di
      gunicorn "gedenaz.app:create_app()"
      ```
    - **Instance Type**: **Free**
-5. **Variables de entorno** (pestaña "Environment" → "Environment Variables"): agregar `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME` con los mismos valores que tu `.env` local de Aiven.
-6. **Certificado CA** (mismo tab, sección **"Secret Files"** — para archivos que no van al repo, distinto de las variables de arriba): crear un secret file, pegar ahí el contenido de `secrets/aiven-ca.pem`. Render va a mostrar la ruta donde lo monta dentro del servicio (normalmente algo como `/etc/secrets/<nombre_del_archivo>`) — copiar esa ruta exacta.
-7. Volver a "Environment Variables" y agregar `DB_SSL_CA` con esa ruta (la de Render, **no** `secrets/aiven-ca.pem` que es la ruta local).
-8. **Create Web Service** → Render clona el repo, corre el build y arranca. Revisar la pestaña "Logs" si algo falla.
-9. Una vez desplegado, probar con la URL pública que da Render:
+4. **Variables de entorno** (pestaña "Environment" → "Environment Variables"): agregar `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME` con los mismos valores que tu `.env` local de Aiven.
+5. **Certificado CA** (mismo tab, sección **"Secret Files"** — para archivos que no van al repo, distinto de las variables de arriba): crear un secret file, pegar ahí el contenido de `secrets/aiven-ca.pem`. Render va a mostrar la ruta donde lo monta dentro del servicio (normalmente algo como `/etc/secrets/<nombre_del_archivo>`) — copiar esa ruta exacta.
+6. Volver a "Environment Variables" y agregar `DB_SSL_CA` con esa ruta (la de Render, **no** `secrets/aiven-ca.pem` que es la ruta local).
+7. **Create Web Service** → Render clona el repo (completo -- no hay forma de clonar solo una carpeta con una URL de git simple; no es un problema porque nada de lo demás queda expuesto por HTTP, Flask solo sirve las rutas que define), corre el build y arranca. Revisar la pestaña "Logs" si algo falla.
+8. Una vez desplegado, probar con la URL pública que da Render:
    ```bash
    curl https://<name>.onrender.com/health
    curl https://<name>.onrender.com/health/db
    ```
 
-**Recordatorio**: el free tier de Render "duerme" el servicio tras 15 minutos sin tráfico (la primera petición después tarda ~1 min en responder mientras despierta) — normal, no es un error.
+**Recordatorios**:
+- El free tier de Render "duerme" el servicio tras 15 minutos sin tráfico (la primera petición después tarda ~1 min en responder mientras despierta) — normal, no es un error.
+- Sin auto-deploy (ver nota de "Public Git Repository" arriba): cada push a `main` que quieran en producción necesita un "Manual Deploy" desde el panel de Render.
 
 ## Entorno del cliente móvil (Android) — pendiente
 
