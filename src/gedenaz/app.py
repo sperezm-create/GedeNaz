@@ -8,11 +8,13 @@ se implementan RF1-RF4 (Fase 1 en adelante, ver docs/specs/04-plan-de-trabajo.md
 
 from flask import Flask, jsonify
 
+from gedenaz.api.productos import productos_bp
 from gedenaz.data.db import get_connection
 
 
 def create_app() -> Flask:
     app = Flask(__name__)
+    app.register_blueprint(productos_bp)
 
     @app.get("/health")
     def health():

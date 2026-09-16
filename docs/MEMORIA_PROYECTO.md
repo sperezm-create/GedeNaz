@@ -49,16 +49,17 @@ Detalle completo con criterios de aceptación: [`specs/01-requisitos-funcionales
 - ✅ Se dejó la guía paso a paso para Aiven y el esquema adaptado (`src/gedenaz/data/schema_cloud.sql`) listos para ejecutar. `config.py` ya soporta SSL (`DB_SSL_CA`), que Aiven exige.
 - ⏳ **Pendiente y bloqueante para el resto del equipo**: elegir el framework de la app Android (ver `mobile/README.md`).
 - ✅ **Base de datos en la nube lista**: servicio `mysql-gedenaz-bd` creado en Aiven, tabla `producto` aplicada y verificada (con `scripts/apply_schema.py`, útil porque MySQL Workbench se cuelga contra bases remotas — bug conocido). El `.env` de Nicolas ya está completo y probado end-to-end contra Aiven.
-- ✅ **Tarea 1.3 avanzada**: capa de conexión Python–MySQL (`src/gedenaz/data/db.py`) + endpoint `GET /health/db`. Probado de punta a punta (API local → SSL → Aiven) con éxito. Se encontró y arregló un bug real (`pyproject.toml` + `pip install -e .`, sin eso `python src/gedenaz/main.py` no corre). 6 tests pasando.
+- ✅ **Tarea 1.3 avanzada**: capa de conexión Python–MySQL (`src/gedenaz/data/db.py`) + endpoint `GET /health/db`. Se encontró y arregló un bug real (`pyproject.toml` + `pip install -e .`, sin eso `python src/gedenaz/main.py` no corre).
+- ✅ **RF1 completo en el backend** (tareas 1.5 y 1.6): `POST /productos` crea un producto validado (nombre/categoría obligatorios, precio > 0, stock ≥ 0) y lo guarda en Aiven. Probado con `pytest` (21 tests) y manualmente con `curl`, de punta a punta. Ver [`BITACORA.md`](BITACORA.md) para el detalle de las 3 capas.
 - ⏳ Falta desplegar la API Flask en Render (por ahora la API solo se corre local, apuntando a la base ya en Aiven).
-- ⏳ Nada de código de los endpoints CRUD reales todavía (solo un `/health` de prueba) — eso empieza en la Fase 1 (tarea 1.2 en adelante, ver plan de trabajo).
+- ⏳ RF2, RF3 y RF4 sin implementar todavía (`listar_productos`, `actualizar_producto`, `eliminar_producto`).
 
 ## Próximos pasos
 
-1. **Decidir el framework de la app Android** (todo el equipo) — ver `mobile/README.md`.
+1. **Decidir el framework de la app Android** (todo el equipo) — ver `mobile/README.md`. Bloquea la tarea 1.4 (pantalla "Crear producto"), que ya tiene un endpoint real (`POST /productos`) esperándola.
 2. Desplegar el backend Flask en Render (pendiente de agendar).
-3. Tarea 1.4 (Sebastian): primera pantalla Android "Crear producto" (depende del punto 1).
-4. Avisarle a Francisco que la tarea 1.3 (conexión Python–MySQL) ya quedó avanzada — revisar `src/gedenaz/data/db.py` antes de seguir con las funciones CRUD (tarea 1.5 en adelante).
+3. Avisarle a Francisco y Sebastian que las tareas 1.3, 1.5 y 1.6 ya quedaron avanzadas — revisar `src/gedenaz/{data,logic,api}/` antes de seguir.
+4. Cuando se retome el plan de trabajo: RF2 (Fase 2, listar/buscar productos).
 
 Cronograma completo con fechas: [`specs/04-plan-de-trabajo.md`](specs/04-plan-de-trabajo.md).
 

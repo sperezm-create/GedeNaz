@@ -4,6 +4,24 @@
 
 ---
 
+## 2026-09-16 (cont. 4) — RF1 completo en el backend (crear producto)
+
+Con la conexión ya lista (tarea 1.3), se implementó RF1 de punta a punta en el backend — tareas 1.5 y 1.6 de la Carta Gantt (Francisco y Sebastian respectivamente), avanzadas en conjunto.
+
+**Qué se agregó, en las 3 capas de la arquitectura:**
+
+- `src/gedenaz/logic/productos.py`: `validar_producto()` y `crear_producto()`. Valida los 4 campos de RF1 (nombre, categoría, precio, stock) según los criterios de aceptación del spec — reporta **todos** los errores a la vez (no uno por uno), como un dict `{campo: mensaje}`. No importa nada de Flask ni de MySQL, se prueba con Python puro.
+- `src/gedenaz/data/productos.py`: `crear_producto()` — hace el `INSERT` y devuelve la fila ya guardada (con `id` y timestamps de MySQL), convirtiendo tipos (`Decimal`→`float`, `datetime`→ISO string) para que sea directamente serializable a JSON.
+- `src/gedenaz/api/productos.py`: blueprint con `POST /productos` — parsea el JSON de la request, llama a `logic.crear_producto()`, devuelve `201` con el producto creado o `400` con los errores de validación.
+
+**Tests nuevos** (21 en total ahora, antes 6): `tests/logic/test_productos.py` (puros, sin DB, corren siempre), `tests/data/test_productos.py` y `tests/api/test_productos.py` (contra Aiven de verdad, se saltan solos sin `.env` configurado). Los tests de integración **borran lo que crean** (`try/finally` con `DELETE`) para no ensuciar la base compartida.
+
+**Verificado manualmente** con `curl` contra la API corriendo local: creación exitosa devuelve `201` con el producto completo; falta de campos obligatorios devuelve `400` con el detalle por campo. Se confirmó que la tabla `producto` en Aiven quedó en 0 filas después de correr todos los tests (sin basura de pruebas).
+
+**Specs actualizadas**: nota "✅ Backend implementado" en RF1 (`01-requisitos-funcionales.md`) y estado actualizado de `data/` en `03-arquitectura.md`.
+
+---
+
 ## 2026-09-16 (cont. 3) — Tarea 1.3: capa de conexión Python–MySQL
 
 Con la base ya lista en Aiven, se avanzó la tarea 1.3 de la Carta Gantt (asignada a Francisco, pero se siguió trabajando en conjunto para no perder impulso).
