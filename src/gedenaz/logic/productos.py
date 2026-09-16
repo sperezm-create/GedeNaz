@@ -24,36 +24,74 @@ class NotFoundError(Exception):
     esta dado de baja -- la API lo traduce a un 404."""
 
 
-def validar_producto(datos: dict) -> None:
-    errores: dict[str, str] = {}
-
-    nombre = datos.get("nombre")
+def _validar_nombre(nombre) -> str | None:
     if not nombre or not str(nombre).strip():
-        errores["nombre"] = "El nombre es obligatorio."
+        return "El nombre es obligatorio."
+    return None
 
-    categoria = datos.get("categoria")
+
+def _validar_categoria(categoria) -> str | None:
     if not categoria or not str(categoria).strip():
-        errores["categoria"] = "La categoria es obligatoria."
+        return "La categoria es obligatoria."
+    return None
 
-    precio = datos.get("precio")
+
+def _validar_precio(precio) -> str | None:
     if precio is None or precio == "":
-        errores["precio"] = "El precio es obligatorio."
-    else:
-        try:
-            if float(precio) <= 0:
-                errores["precio"] = "El precio debe ser mayor que 0."
-        except (TypeError, ValueError):
-            errores["precio"] = "El precio debe ser un numero."
+        return "El precio es obligatorio."
+    try:
+        if float(precio) <= 0:
+            return "El precio debe ser mayor que 0."
+    except (TypeError, ValueError):
+        return "El precio debe ser un numero."
+    return None
 
-    stock = datos.get("stock")
+
+def _validar_stock(stock) -> str | None:
     if stock is None or stock == "":
-        errores["stock"] = "El stock es obligatorio."
-    else:
-        try:
-            if int(stock) < 0:
-                errores["stock"] = "El stock no puede ser negativo."
-        except (TypeError, ValueError):
-            errores["stock"] = "El stock debe ser un numero entero."
+        return "El stock es obligatorio."
+    try:
+        if int(stock) < 0:
+            return "El stock no puede ser negativo."
+    except (TypeError, ValueError):
+        return "El stock debe ser un numero entero."
+    return None
+
+
+_VALIDADORES_POR_CAMPO = {
+    "nombre": _validar_nombre,
+    "categoria": _validar_categoria,
+    "precio": _validar_precio,
+    "stock": _validar_stock,
+}
+
+
+def validar_producto(datos: dict) -> None:
+    """RF1/RF3 (PUT): valida los 4 campos, todos obligatorios."""
+    errores: dict[str, str] = {}
+    for campo, validador in _VALIDADORES_POR_CAMPO.items():
+        mensaje = validador(datos.get(campo))
+        if mensaje:
+            errores[campo] = mensaje
+
+    if errores:
+        raise ValidationError(errores)
+
+
+def validar_producto_parcial(datos: dict) -> None:
+    """RF3 (PATCH): valida solo los campos presentes en `datos` -- los
+    que faltan no se tocan. Exige al menos un campo reconocido."""
+    presentes = _VALIDADORES_POR_CAMPO.keys() & datos.keys()
+    if not presentes:
+        raise ValidationError(
+            {"_general": "Debes enviar al menos un campo (nombre, categoria, precio o stock)."}
+        )
+
+    errores: dict[str, str] = {}
+    for campo in presentes:
+        mensaje = _VALIDADORES_POR_CAMPO[campo](datos.get(campo))
+        if mensaje:
+            errores[campo] = mensaje
 
     if errores:
         raise ValidationError(errores)
@@ -100,6 +138,30 @@ def actualizar_producto(id_: int, datos: dict) -> dict:
         precio=float(datos["precio"]),
         stock=int(datos["stock"]),
     )
+    if producto is None:
+        raise NotFoundError(f"No existe un producto activo con id {id_}.")
+    return producto
+
+
+def actualizar_producto_parcial(id_: int, datos: dict) -> dict:
+    """RF3 (PATCH): valida solo los campos presentes en `datos` y
+    actualiza unicamente esos, dejando el resto del producto sin tocar
+    (ej. ajustar solo el stock tras una venta, sin reenviar nombre,
+    categoria y precio). Lanza ValidationError o NotFoundError segun
+    corresponda."""
+    validar_producto_parcial(datos)
+
+    campos: dict = {}
+    if "nombre" in datos:
+        campos["nombre"] = str(datos["nombre"]).strip()
+    if "categoria" in datos:
+        campos["categoria"] = str(datos["categoria"]).strip()
+    if "precio" in datos:
+        campos["precio"] = float(datos["precio"])
+    if "stock" in datos:
+        campos["stock"] = int(datos["stock"])
+
+    producto = productos_repo.actualizar_producto_parcial(id_, campos)
     if producto is None:
         raise NotFoundError(f"No existe un producto activo con id {id_}.")
     return producto

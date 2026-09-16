@@ -21,6 +21,7 @@ Este proyecto se desarrolla en modalidad **spec-first**: antes de programar un c
 4. [03-arquitectura.md](docs/specs/03-arquitectura.md) — arquitectura cliente-servidor (app Android → API → MySQL) y stack tecnológico.
 5. [04-plan-de-trabajo.md](docs/specs/04-plan-de-trabajo.md) — fases, hitos y roles (Carta Gantt).
 6. [05-entorno-desarrollo.md](docs/specs/05-entorno-desarrollo.md) — cómo levantar el entorno de desarrollo.
+7. [06-referencia-api.md](docs/specs/06-referencia-api.md) — contrato HTTP completo (endpoints, formatos), para quien programe la app Android.
 
 ## Quickstart
 

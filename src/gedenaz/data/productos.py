@@ -96,8 +96,9 @@ def obtener_producto(id_: int) -> dict | None:
 def actualizar_producto(
     id_: int, nombre: str, categoria: str, precio: float, stock: int
 ) -> dict | None:
-    """Actualiza los 4 campos de un producto activo. Devuelve el producto
-    ya actualizado, o None si no existe (o esta dado de baja)."""
+    """Actualiza los 4 campos de un producto activo (reemplazo completo,
+    PUT). Devuelve el producto ya actualizado, o None si no existe (o
+    esta dado de baja)."""
     with connection_scope() as conn:
         cursor = conn.cursor()
         cursor.execute(
@@ -106,19 +107,50 @@ def actualizar_producto(
             (nombre, categoria, precio, stock, id_),
         )
         conn.commit()
-        actualizo_algo = cursor.rowcount > 0
 
-        if not actualizo_algo:
-            cursor.close()
-            return None
-
+        # No usar cursor.rowcount para decidir "no existe": por defecto
+        # MySQL reporta filas CAMBIADAS, no filas que matchearon el WHERE
+        # -- si se manda exactamente el mismo valor que ya tenia, rowcount
+        # da 0 aunque el producto exista. Se confirma la existencia con un
+        # SELECT aparte, sin importar si el UPDATE cambio algo o no.
         cursor.execute(
-            f"SELECT {_COLUMNAS} FROM producto WHERE id = %s", (id_,)
+            f"SELECT {_COLUMNAS} FROM producto WHERE id = %s AND activo = 1",
+            (id_,),
         )
         fila = cursor.fetchone()
         cursor.close()
 
-    return _serializar(fila)
+    return _serializar(fila) if fila else None
+
+
+def actualizar_producto_parcial(id_: int, campos: dict) -> dict | None:
+    """Actualiza solo los campos presentes en `campos` (PATCH -- RF3),
+    dejando el resto sin tocar. Devuelve el producto actualizado, o None
+    si no existe (o esta dado de baja)."""
+    columnas_validas = {"nombre", "categoria", "precio", "stock"}
+    a_actualizar = {k: v for k, v in campos.items() if k in columnas_validas}
+
+    with connection_scope() as conn:
+        cursor = conn.cursor()
+
+        if a_actualizar:
+            set_clause = ", ".join(f"{col} = %s" for col in a_actualizar)
+            cursor.execute(
+                f"UPDATE producto SET {set_clause} WHERE id = %s AND activo = 1",
+                (*a_actualizar.values(), id_),
+            )
+            conn.commit()
+
+        # Misma razon que en actualizar_producto: confirmar existencia con
+        # un SELECT aparte, no con cursor.rowcount.
+        cursor.execute(
+            f"SELECT {_COLUMNAS} FROM producto WHERE id = %s AND activo = 1",
+            (id_,),
+        )
+        fila = cursor.fetchone()
+        cursor.close()
+
+    return _serializar(fila) if fila else None
 
 
 def eliminar_producto(id_: int) -> bool:

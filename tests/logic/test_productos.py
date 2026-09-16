@@ -6,7 +6,13 @@ de datos configurada.
 
 import pytest
 
-from gedenaz.logic.productos import ValidationError, actualizar_producto, validar_producto
+from gedenaz.logic.productos import (
+    ValidationError,
+    actualizar_producto,
+    actualizar_producto_parcial,
+    validar_producto,
+    validar_producto_parcial,
+)
 
 
 def test_producto_valido_no_lanza_error():
@@ -78,4 +84,47 @@ def test_actualizar_producto_valida_antes_de_tocar_la_base():
     que este test no necesita .env ni conexion a MySQL."""
     with pytest.raises(ValidationError) as exc:
         actualizar_producto(1, {"nombre": "Anillo", "categoria": "anillo", "precio": 100, "stock": -1})
+    assert "stock" in exc.value.errores
+
+
+# --- validar_producto_parcial (PATCH) ---
+
+
+def test_parcial_un_solo_campo_valido_no_lanza_error():
+    validar_producto_parcial({"stock": 10})
+
+
+def test_parcial_sin_campos_es_error():
+    with pytest.raises(ValidationError) as exc:
+        validar_producto_parcial({})
+    assert "_general" in exc.value.errores
+
+
+def test_parcial_ignora_campos_desconocidos():
+    with pytest.raises(ValidationError) as exc:
+        validar_producto_parcial({"campo_inventado": "x"})
+    assert "_general" in exc.value.errores
+
+
+def test_parcial_solo_valida_los_campos_presentes():
+    """Si solo mandas stock, no debe exigir nombre/categoria/precio."""
+    validar_producto_parcial({"stock": 0})
+
+
+def test_parcial_stock_negativo_invalido():
+    with pytest.raises(ValidationError) as exc:
+        validar_producto_parcial({"stock": -1})
+    assert "stock" in exc.value.errores
+    assert "nombre" not in exc.value.errores
+
+
+def test_parcial_precio_invalido():
+    with pytest.raises(ValidationError) as exc:
+        validar_producto_parcial({"precio": 0})
+    assert "precio" in exc.value.errores
+
+
+def test_actualizar_producto_parcial_valida_antes_de_tocar_la_base():
+    with pytest.raises(ValidationError) as exc:
+        actualizar_producto_parcial(1, {"stock": -1})
     assert "stock" in exc.value.errores

@@ -52,7 +52,10 @@ Detalle completo con criterios de aceptación: [`specs/01-requisitos-funcionales
 - ✅ **Tarea 1.3 avanzada**: capa de conexión Python–MySQL (`src/gedenaz/data/db.py`) + endpoint `GET /health/db`. Se encontró y arregló un bug real (`pyproject.toml` + `pip install -e .`, sin eso `python src/gedenaz/main.py` no corre).
 - ✅ **CRUD completo en el backend, en producción** (RF1-RF4): `POST/GET/PUT/DELETE /productos` — crear, listar/filtrar/detalle, actualizar y eliminar (baja lógica). Probado con `pytest` (30 tests) y manualmente con `curl`, de punta a punta contra Aiven y contra `https://gedenaz-api.onrender.com`. Ver [`BITACORA.md`](BITACORA.md) para el detalle de las 3 capas.
 - ✅ **Backend desplegado y funcionando en Render**: `https://gedenaz-api.onrender.com` — `/health`, `/health/db` y `POST /productos` probados en producción, responden bien. Como el repo no es de Nicolas (es de Sebastian) y es público, se usó "Public Git Repository" en vez de conectar GitHub (sin auto-deploy: hay que apretar "Manual Deploy" en Render después de cada push que quieran llevar a producción).
-- ⏳ El backend está funcionalmente completo. Lo único que falta para tener el sistema completo es la **app Android** (bloqueada por la decisión de framework).
+- ✅ **Documentación de la API lista**: [`specs/06-referencia-api.md`](specs/06-referencia-api.md) — contrato HTTP completo, verificado contra el servidor real. Se unificó el formato de errores (antes inconsistente entre `400` y `404`) antes de que alguien escribiera código Android dependiendo de la forma vieja.
+- ✅ **`PATCH /productos/<id>`** agregado para actualizar un solo campo (ej. stock) sin reenviar todo el producto (`PUT` se mantiene para reemplazo completo). De paso se encontró y corrigió un **bug real ya en producción**: actualizar un producto con los mismos valores que ya tenía hacía que la API devolviera un `404` falso (por cómo MySQL cuenta filas "cambiadas" vs. "encontradas"). 41 tests en verde. Ver [`BITACORA.md`](BITACORA.md) para el detalle técnico.
+- ✅ Base sembrada con 6 productos de prueba (2 anillos, 2 collares, 1 pulsera, 1 aro) en `https://gedenaz-api.onrender.com`.
+- ⏳ El backend está funcionalmente completo. Lo único que falta para tener el sistema completo es la **app Android** (bloqueada por la decisión de framework). **Pendiente**: hacer "Manual Deploy" en Render para que el cambio de formato de errores llegue a producción.
 
 ## Próximos pasos
 
@@ -69,7 +72,8 @@ Cronograma completo con fechas: [`specs/04-plan-de-trabajo.md`](specs/04-plan-de
 docs/
   MEMORIA_PROYECTO.md   ← este archivo (estado actual, se reescribe)
   BITACORA.md           ← registro cronológico de sesiones (solo crece)
-  specs/                ← especificaciones spec-first (00 a 05)
+  specs/                ← especificaciones spec-first (00 a 06)
+  propuestas/            ← ideas discutidas pero no decididas (ej. registro de ventas)
 mobile/                  ← app Android (framework pendiente de decisión)
 scripts/                 ← utilidades (ej. apply_schema.py — correr un .sql contra la base del .env)
 src/gedenaz/             ← backend / API (api / logic / data)

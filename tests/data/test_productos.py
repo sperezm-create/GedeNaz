@@ -12,6 +12,7 @@ import pytest
 from gedenaz.data.db import connection_scope
 from gedenaz.data.productos import (
     actualizar_producto,
+    actualizar_producto_parcial,
     crear_producto,
     eliminar_producto,
     listar_productos,
@@ -85,6 +86,45 @@ def test_actualizar_producto_cambia_los_campos():
         assert actualizado["stock"] == 10
 
         assert actualizar_producto(-1, nombre="x", categoria="x", precio=1, stock=1) is None
+    finally:
+        _borrar(creado["id"])
+
+
+def test_actualizar_producto_con_los_mismos_valores_no_lo_pierde():
+    """Regresion: MySQL reporta 0 filas 'cambiadas' cuando el UPDATE no
+    modifica ningun valor -- no debe interpretarse como 'no existe'."""
+    creado = crear_producto(nombre="Sin cambios pytest", categoria="anillo", precio=100, stock=5)
+    try:
+        igual = actualizar_producto(
+            creado["id"], nombre="Sin cambios pytest", categoria="anillo", precio=100, stock=5
+        )
+        assert igual is not None
+        assert igual["id"] == creado["id"]
+    finally:
+        _borrar(creado["id"])
+
+
+def test_actualizar_producto_parcial_solo_cambia_lo_enviado():
+    creado = crear_producto(nombre="Parcial pytest", categoria="anillo", precio=100, stock=5)
+    try:
+        actualizado = actualizar_producto_parcial(creado["id"], {"stock": 20})
+        assert actualizado["stock"] == 20
+        # El resto de los campos no se toco.
+        assert actualizado["nombre"] == "Parcial pytest"
+        assert actualizado["categoria"] == "anillo"
+        assert actualizado["precio"] == 100
+
+        assert actualizar_producto_parcial(-1, {"stock": 1}) is None
+    finally:
+        _borrar(creado["id"])
+
+
+def test_actualizar_producto_parcial_con_el_mismo_valor_no_lo_pierde():
+    creado = crear_producto(nombre="Parcial sin cambios pytest", categoria="anillo", precio=100, stock=5)
+    try:
+        igual = actualizar_producto_parcial(creado["id"], {"stock": 5})
+        assert igual is not None
+        assert igual["stock"] == 5
     finally:
         _borrar(creado["id"])
 

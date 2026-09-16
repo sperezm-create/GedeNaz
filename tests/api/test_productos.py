@@ -46,7 +46,9 @@ def test_post_productos_valida_campos_obligatorios():
     response = client.post("/productos", json={"categoria": "prueba", "precio": 100, "stock": 1})
 
     assert response.status_code == 400
-    assert "nombre" in response.get_json()["errores"]
+    body = response.get_json()
+    assert body["error"]["mensaje"]
+    assert "nombre" in body["error"]["campos"]
 
 
 def test_post_productos_valida_stock_negativo():
@@ -57,7 +59,7 @@ def test_post_productos_valida_stock_negativo():
     )
 
     assert response.status_code == 400
-    assert "stock" in response.get_json()["errores"]
+    assert "stock" in response.get_json()["error"]["campos"]
 
 
 def test_get_productos_lista_y_filtra():
@@ -116,6 +118,28 @@ def test_put_producto_actualiza_y_valida():
             "/productos/999999999",
             json={"nombre": "x", "categoria": "x", "precio": 1, "stock": 1},
         )
+        assert no_existe.status_code == 404
+    finally:
+        _borrar(creado["id"])
+
+
+def test_patch_producto_actualiza_solo_el_campo_enviado():
+    client = create_app().test_client()
+    creado = client.post(
+        "/productos",
+        json={"nombre": "Patch API pytest", "categoria": "anillo", "precio": 10, "stock": 1},
+    ).get_json()
+    try:
+        editado = client.patch(f"/productos/{creado['id']}", json={"stock": 7})
+        assert editado.status_code == 200
+        body = editado.get_json()
+        assert body["stock"] == 7
+        assert body["nombre"] == "Patch API pytest"  # no se toco
+
+        sin_campos = client.patch(f"/productos/{creado['id']}", json={})
+        assert sin_campos.status_code == 400
+
+        no_existe = client.patch("/productos/999999999", json={"stock": 1})
         assert no_existe.status_code == 404
     finally:
         _borrar(creado["id"])

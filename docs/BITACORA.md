@@ -4,6 +4,56 @@
 
 ---
 
+## 2026-09-16 (cont. 10) — PATCH para actualización parcial + bug de rowcount corregido
+
+Nicolas preguntó si RF3 (`PUT`) podía evitar tener que mandar los 4 campos para actualizar solo uno (ej. ajustar stock). Se acordó: `PATCH` nuevo para actualización parcial, `PUT` se mantiene para reemplazo completo.
+
+**Bug real encontrado al implementar esto** (y que ya estaba en el `PUT` en producción, no solo en el `PATCH` nuevo): se probó empíricamente contra Aiven que `cursor.rowcount` de `mysql-connector-python` reporta filas **cambiadas**, no filas que matchearon el `WHERE` — si se actualiza un producto mandando exactamente los mismos valores que ya tenía (sin cambio real), `rowcount` da `0`, y el código interpretaba eso como "el producto no existe", devolviendo un `404` incorrecto. Confirmado con una prueba directa (`UPDATE` con mismo valor → `rowcount = 0`; con valor distinto → `rowcount = 1`).
+
+**Arreglo**: ninguna función de actualización usa `rowcount` para decidir "no existe" — ahora, después del `UPDATE`, siempre se hace un `SELECT` aparte (`WHERE id = ... AND activo = 1`) para confirmar la existencia, sin importar si el `UPDATE` cambió algo o no.
+
+**Qué se agregó/cambió:**
+
+- `logic/productos.py`: refactor de `validar_producto` para compartir validadores por campo (`_validar_nombre`, `_validar_categoria`, `_validar_precio`, `_validar_stock`) entre la validación completa (RF1/PUT) y la nueva `validar_producto_parcial` (PATCH — exige al menos un campo reconocido, valida solo los presentes).
+- `data/productos.py`: `actualizar_producto` corregido (bug de arriba) + `actualizar_producto_parcial` nueva (UPDATE dinámico solo de los campos presentes).
+- `api/productos.py`: `PATCH /productos/<id>` nuevo.
+- **11 tests nuevos** (30 → 41), incluidas 2 pruebas de regresión específicas del bug de `rowcount` (actualizar con los mismos valores, completo y parcial, debe seguir encontrando el producto).
+- `docs/specs/06-referencia-api.md`: documentado `PATCH`, con guía de cuándo usar `PUT` vs `PATCH`. `01-requisitos-funcionales.md` y `03-arquitectura.md` actualizados (el detalle del bug de `rowcount` queda anotado en la arquitectura para quien toque `data/` a futuro).
+
+**Verificado manualmente** con `curl`: `PATCH` solo con `stock` cambia solo ese campo; repetir el mismo `PATCH` (mismo valor) sigue devolviendo `200`, no `404`; `PATCH` sin campos devuelve `400`. Base de Aiven confirmada en 6 productos activos (sin basura de tests).
+
+**Pendiente de tu parte**: otro "Manual Deploy" en Render para llevar el `PATCH` y el arreglo del bug a producción.
+
+---
+
+## 2026-09-16 (cont. 9) — Referencia de API y unificación del formato de errores
+
+Nicolas preguntó si backend + BD ya estaban listos para que el equipo avance con Android. Se hizo una auditoría honesta y se encontraron 2 huecos reales:
+
+1. **No existía un documento de referencia de la API** — el contrato HTTP estaba desperdigado en notas de implementación dentro de cada RF, sin ejemplos de JSON. Quien programe el networking de la app Android habría tenido que leer el código fuente directamente.
+2. **Inconsistencia real en el formato de errores**: `400` devolvía `{"errores": {...}}` (plural, dict) y `404` devolvía `{"error": "..."}` (singular, string) — dos formas distintas para el mismo concepto.
+
+**Decisión** (confirmada con Nicolas): unificar el formato de error ahora, porque nadie ha escrito código Android todavía que dependa de la forma actual — es el momento más barato para cambiarlo. Nuevo formato único para **todo** error, sea `400` o `404`:
+
+```json
+{"error": {"mensaje": "...", "campos": {...} | null}}
+```
+
+`mensaje` siempre presente (string legible); `campos` (dict campo→error) presente solo en validación (`400`), `null` en el resto.
+
+**Qué se cambió:**
+
+- `src/gedenaz/api/productos.py`: helper `_error()` centraliza la construcción del envoltorio; los 4 endpoints que pueden fallar (`POST`, `GET <id>`, `PUT`, `DELETE`) lo usan.
+- `tests/api/test_productos.py`: actualizado para verificar la nueva forma (`body["error"]["campos"]` en vez de `body["errores"]`).
+- **Nuevo documento**: [`docs/specs/06-referencia-api.md`](specs/06-referencia-api.md) — contrato HTTP completo: base URL (local y producción), envoltorio de error, forma de `Producto`, y los 5 endpoints (los 4 de RF1-RF4 + `/health`/`/health/db`) con ejemplos de request/response. **Verificado contra el servidor real** con `curl` (400, 404 y listado vacío) — los ejemplos del documento coinciden exactamente con las respuestas reales.
+- `README.md` y `mobile/README.md` enlazan al nuevo documento; `mobile/README.md` también actualizado con la URL de producción (ya no es un pendiente).
+
+**30 tests en verde.** Datos de prueba (6 productos sembrados antes) siguen intactos — no se tocaron durante esta sesión de trabajo.
+
+**Pendiente de tu parte**: hacer "Manual Deploy" en Render para que el cambio de formato de errores quede en producción (por ahora solo está en local y en el repo).
+
+---
+
 ## 2026-09-16 (cont. 8) — CRUD completo en el backend (RF2, RF3, RF4)
 
 Con RF1 ya en producción, Nicolas pidió dejar el CRUD completo del backend listo (RF2 Leer, RF3 Actualizar, RF4 Eliminar), siguiendo el mismo patrón de 3 capas que RF1.

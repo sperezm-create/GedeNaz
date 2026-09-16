@@ -3,6 +3,8 @@
 > Ver [00-vision-y-alcance.md](00-vision-y-alcance.md) para el contexto general. Los campos exactos de "Producto" listados aquí son una propuesta inicial basada en el informe (sección 6.2: nombre, precio, cantidad disponible, categoría); **deben validarse con Gedalias y Nazareth** antes o durante la implementación de RF1 (así lo marca el propio análisis de riesgos del informe). Cuando se confirmen o cambien, actualizar este documento primero.
 >
 > **Nota (2026-09-09)**: el cliente es una **app Android** que habla con una API (ver [03-arquitectura.md](03-arquitectura.md)), no una app de escritorio con acceso directo a la base. "Formulario"/"pantalla" abajo se refiere a la pantalla Android; las validaciones de campos se hacen tanto en la app (para feedback inmediato) como en la API (porque la app nunca debe ser la única barrera — cualquier llamado directo a la API también debe quedar protegido).
+>
+> **Contrato HTTP completo** (endpoints, formato exacto de cada request/response, formato de errores): [06-referencia-api.md](06-referencia-api.md).
 
 Usuario único del sistema: **administrador** (Gedalias / Nazareth), sin diferenciación de roles ni permisos.
 
@@ -57,7 +59,7 @@ Usuario único del sistema: **administrador** (Gedalias / Nazareth), sin diferen
 
 **Como** administrador, **quiero** editar los datos de un producto existente y ajustar su stock **para** mantener el inventario al día tras una venta o reposición.
 
-> ✅ **Backend implementado y en producción** (2026-09-16): `PUT /productos/<id>` (`src/gedenaz/api/productos.py`) — reusa las mismas validaciones de RF1 (`400` si son inválidas), `404` si el producto no existe/está inactivo. El edit es de los 4 campos completos (no parcial), recibiendo el stock ya ajustado (no un delta) — así que "ajustar stock" es simplemente enviar el nuevo valor. Falta la pantalla Android (tarea 2.5, depende del framework).
+> ✅ **Backend implementado y en producción** (2026-09-16): dos endpoints — `PUT /productos/<id>` (reemplazo completo, los 4 campos) y `PATCH /productos/<id>` (actualización parcial, solo los campos enviados — pensado para el caso más común: ajustar el stock sin reenviar todo el producto). Ambos reusan las mismas reglas de validación por campo que RF1 (`400` si son inválidas, `404` si el producto no existe/está inactivo). Detalle completo con ejemplos: [06-referencia-api.md](06-referencia-api.md). Falta la pantalla Android (tarea 2.5, depende del framework).
 
 **Funciones**
 
