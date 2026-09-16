@@ -70,6 +70,8 @@ Usuario único del sistema: **administrador** (Gedalias / Nazareth), sin diferen
 
 Generación de reportes de ventas o productos más rentables. Queda como **trabajo futuro**; no se implementa en esta versión (ver [00-vision-y-alcance.md](00-vision-y-alcance.md)). Se documenta aquí solo para trazabilidad con el informe y la Carta Gantt.
 
+> Existe una propuesta de diseño (no decidida) de cómo se vería esto — tabla `venta`, relación con `producto`, etc. — en [`docs/propuestas/registro-de-ventas.md`](../propuestas/registro-de-ventas.md), para cuando el equipo quiera discutirlo.
+
 ---
 
 ## RF4 — Eliminar producto

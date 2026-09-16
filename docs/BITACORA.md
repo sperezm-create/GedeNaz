@@ -4,6 +4,16 @@
 
 ---
 
+## 2026-09-16 (cont. 7) — Propuesta de diseño: registro de ventas (RF3.1)
+
+Nicolas preguntó cómo se manejaría el registro de ventas (¿se guarda en la BD? ¿cómo?). Se aclaró que **hoy no existe ningún registro de ventas** — RF3 solo permite editar el stock a mano, sin dejar rastro de qué se vendió ni a qué precio. Se confirmó con Nicolas que esto era **solo curiosidad sobre RF3.1** (trabajo futuro, explícitamente fuera del alcance del informe entregado), no un pedido de ampliar el alcance ahora.
+
+Se documentó como propuesta en [`docs/propuestas/registro-de-ventas.md`](propuestas/registro-de-ventas.md) (nuevo directorio `docs/propuestas/`, para ideas discutidas pero no decididas — distinto de `docs/specs/`, que es la fuente de verdad del alcance ya confirmado). Puntos clave de la propuesta: tabla `venta` separada de `producto` (relación 1 a muchos), con `precio_unitario` guardado como "foto" del precio al momento de la venta (no como referencia al precio actual, para no reescribir el historial cada vez que cambia un precio); "registrar venta" como acción nueva y distinta de RF3 (inserta en `venta` + descuenta stock en una sola transacción); valida la decisión ya tomada de usar baja lógica (`activo`) en vez de `DELETE` físico para RF4.
+
+**No se tocó** el modelo de datos actual (`02-modelo-de-datos.md`, `schema.sql`) ni el código — es una nota para que Nicolas la lleve a discutir con el equipo, nada más. Si se decide adoptar, se traslada primero a las specs oficiales (spec-first) antes de programar.
+
+---
+
 ## 2026-09-16 (cont. 6) — Backend desplegado en Render, funcionando en producción
 
 Se ejecutó el despliegue preparado en la sesión anterior. Un problema en el camino:
