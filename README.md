@@ -16,8 +16,8 @@ Este repositorio, por ahora, implementa el **backend**: la app Android en sí vi
 Este proyecto se desarrolla en modalidad **spec-first**: antes de programar un cambio de alcance, requisito o modelo de datos, se actualiza el documento correspondiente en [`docs/specs/`](docs/specs/):
 
 1. [00-vision-y-alcance.md](docs/specs/00-vision-y-alcance.md) — resumen, problema, objetivos, alcance.
-2. [01-requisitos-funcionales.md](docs/specs/01-requisitos-funcionales.md) — RF1–RF4 con criterios de aceptación.
-3. [02-modelo-de-datos.md](docs/specs/02-modelo-de-datos.md) — entidad Producto y esquema MySQL.
+2. [01-requisitos-funcionales.md](docs/specs/01-requisitos-funcionales.md) — RF1–RF5 y RF3.1 (producto más vendido) con criterios de aceptación.
+3. [02-modelo-de-datos.md](docs/specs/02-modelo-de-datos.md) — entidades Producto, Venta y DetalleVenta, y esquema MySQL.
 4. [03-arquitectura.md](docs/specs/03-arquitectura.md) — arquitectura cliente-servidor (app Android → API → MySQL) y stack tecnológico.
 5. [04-plan-de-trabajo.md](docs/specs/04-plan-de-trabajo.md) — fases, hitos y roles (Carta Gantt).
 6. [05-entorno-desarrollo.md](docs/specs/05-entorno-desarrollo.md) — cómo levantar el entorno de desarrollo.

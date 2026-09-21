@@ -7,6 +7,11 @@
 -- ya viene creada). No lleva CREATE DATABASE ni USE -- pegar esto ya parado
 -- adentro de la base correspondiente.
 --
+-- Es idempotente: se puede volver a ejecutar sobre una base que ya tiene
+-- tablas (CREATE TABLE IF NOT EXISTS, indices declarados dentro de la
+-- tabla) y solo crea lo que falta. Asi se agregaron venta y detalle_venta
+-- a la base existente sin tocar producto.
+--
 -- Ver docs/specs/05-entorno-desarrollo.md, seccion "Desplegar la base de
 -- datos en Aiven" para el paso a paso completo.
 
@@ -20,8 +25,24 @@ CREATE TABLE IF NOT EXISTS producto (
     fecha_creacion       DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     fecha_actualizacion  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     CONSTRAINT chk_precio_positivo CHECK (precio > 0),
-    CONSTRAINT chk_stock_no_negativo CHECK (stock >= 0)
+    CONSTRAINT chk_stock_no_negativo CHECK (stock >= 0),
+    INDEX idx_producto_nombre (nombre),
+    INDEX idx_producto_categoria (categoria)
 );
 
-CREATE INDEX idx_producto_nombre ON producto (nombre);
-CREATE INDEX idx_producto_categoria ON producto (categoria);
+CREATE TABLE IF NOT EXISTS venta (
+    id           INT AUTO_INCREMENT PRIMARY KEY,
+    fecha_venta  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_venta_fecha (fecha_venta)
+);
+
+CREATE TABLE IF NOT EXISTS detalle_venta (
+    id               INT AUTO_INCREMENT PRIMARY KEY,
+    venta_id         INT NOT NULL,
+    producto_id      INT NOT NULL,
+    cantidad         INT NOT NULL,
+    precio_unitario  DECIMAL(10,2) NOT NULL,
+    CONSTRAINT fk_detalle_venta FOREIGN KEY (venta_id) REFERENCES venta (id),
+    CONSTRAINT fk_detalle_producto FOREIGN KEY (producto_id) REFERENCES producto (id),
+    CONSTRAINT chk_cantidad_positiva CHECK (cantidad > 0)
+);

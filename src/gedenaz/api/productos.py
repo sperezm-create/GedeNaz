@@ -6,9 +6,9 @@ propias.
 
 from flask import Blueprint, jsonify, request
 
+from gedenaz.api.respuestas import error_json
+from gedenaz.logic.errores import NotFoundError, ValidationError
 from gedenaz.logic.productos import (
-    NotFoundError,
-    ValidationError,
     actualizar_producto,
     actualizar_producto_parcial,
     crear_producto,
@@ -20,20 +20,13 @@ from gedenaz.logic.productos import (
 productos_bp = Blueprint("productos", __name__)
 
 
-def _error(mensaje: str, campos: dict[str, str] | None = None, status: int = 400):
-    """Sobre unico para toda respuesta de error de este blueprint --
-    ver docs/specs/06-referencia-api.md. `campos` va solo en errores de
-    validacion (None en el resto, ej. 404)."""
-    return jsonify(error={"mensaje": mensaje, "campos": campos}), status
-
-
 @productos_bp.post("/productos")
 def crear():
     datos = request.get_json(silent=True) or {}
     try:
         producto = crear_producto(datos)
     except ValidationError as exc:
-        return _error("Los datos enviados no son validos.", campos=exc.errores)
+        return error_json("Los datos enviados no son validos.", campos=exc.errores)
     return jsonify(producto), 201
 
 
@@ -50,7 +43,7 @@ def detalle(id_: int):
     try:
         producto = obtener_producto(id_)
     except NotFoundError as exc:
-        return _error(str(exc), status=404)
+        return error_json(str(exc), status=404)
     return jsonify(producto), 200
 
 
@@ -60,9 +53,9 @@ def actualizar(id_: int):
     try:
         producto = actualizar_producto(id_, datos)
     except ValidationError as exc:
-        return _error("Los datos enviados no son validos.", campos=exc.errores)
+        return error_json("Los datos enviados no son validos.", campos=exc.errores)
     except NotFoundError as exc:
-        return _error(str(exc), status=404)
+        return error_json(str(exc), status=404)
     return jsonify(producto), 200
 
 
@@ -72,9 +65,9 @@ def actualizar_parcial(id_: int):
     try:
         producto = actualizar_producto_parcial(id_, datos)
     except ValidationError as exc:
-        return _error("Los datos enviados no son validos.", campos=exc.errores)
+        return error_json("Los datos enviados no son validos.", campos=exc.errores)
     except NotFoundError as exc:
-        return _error(str(exc), status=404)
+        return error_json(str(exc), status=404)
     return jsonify(producto), 200
 
 
@@ -83,5 +76,5 @@ def eliminar(id_: int):
     try:
         eliminar_producto(id_)
     except NotFoundError as exc:
-        return _error(str(exc), status=404)
+        return error_json(str(exc), status=404)
     return "", 204

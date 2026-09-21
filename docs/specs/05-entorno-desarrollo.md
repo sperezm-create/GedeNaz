@@ -110,7 +110,11 @@ Esta sección la ejecuta cada quien con **su propia cuenta** — son pasos manua
 
 7. Verificar la conexión corriendo la API local apuntando a la base en la nube: `python src/gedenaz/main.py`.
 
-**Importante — inactividad**: el plan gratis de Aiven **apaga el servicio automáticamente tras un período de inactividad** (avisan antes por correo). Si lo dejan quieto varias semanas (ej. entre avances de la Carta Gantt), puede que haya que volver a encenderlo manualmente desde la consola de Aiven antes de una demo o entrega.
+**Importante — inactividad**: el plan gratis de Aiven **apaga el servicio automáticamente tras un período de inactividad** (avisan antes por correo). No hace falta que pasen semanas: **el 2026-09-20 se encontró apagado tras solo ~4 días sin uso** (feriado de fiestas patrias). Los datos **no se pierden**; hay que encenderlo a mano: consola de Aiven → servicio `mysql-gedenaz-bd` → **"Power on"** (tarda un par de minutos en volver a "Running").
+
+**Cómo reconocer que está apagado**: `GET /health/db` de la API responde `503` con un `detail` como `Can't connect to MySQL server ... (Errno -2: Name or service not known)`, y localmente `mysql.connector` falla con `Unknown MySQL server host` (el nombre de host deja de resolver mientras el servicio está apagado). `GET /health` (sin base) sigue en `200`. **Antes de cualquier demo o entrega, conviene revisar `/health/db` y encender el servicio si hace falta.**
+
+**Actualizar el esquema de una base que ya existe** (ej. al sumar tablas nuevas como `venta`/`detalle_venta`): `schema_cloud.sql` es idempotente, así que basta volver a correr `python scripts/apply_schema.py src/gedenaz/data/schema_cloud.sql` — crea solo lo que falta y no toca los datos.
 
 **Error común — "Invalid ssl-mode"**: si al conectar (Workbench o `mysql-connector-python`) sale `Invalid ssl-mode, value should be either 'verify_ca' or 'verify_identity' when any of 'ssl-ca'... are provided`, es porque diste un certificado CA sin pedirle al cliente que lo use para verificar. Arreglo:
 - **MySQL Workbench**: en la conexión → pestaña **SSL** → cambiar "Use SSL" de "If available" a **"Require and Verify CA"**.

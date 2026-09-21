@@ -72,11 +72,52 @@ Usuario único del sistema: **administrador** (Gedalias / Nazareth), sin diferen
 - Los mismos campos obligatorios y tipos de dato de RF1 aplican al editar.
 - Tras guardar, los cambios son visibles de inmediato en RF2.
 
-### RF3.1 — Reportes analíticos (fuera de alcance actual)
+### RF3.1 — Producto más vendido (reporte)
 
-Generación de reportes de ventas o productos más rentables. Queda como **trabajo futuro**; no se implementa en esta versión (ver [00-vision-y-alcance.md](00-vision-y-alcance.md)). Se documenta aquí solo para trazabilidad con el informe y la Carta Gantt.
+> **Dentro del alcance desde 2026-09-20.** El informe lo listaba como "trabajo futuro", pero el equipo aclaró que es un requerimiento **pedido por el cliente** (ver [00-vision-y-alcance.md](00-vision-y-alcance.md)). Depende de RF5 (sin ventas registradas no hay qué reportar).
 
-> Existe una propuesta de diseño (no decidida) de cómo se vería esto — tabla `venta`, relación con `producto`, etc. — en [`docs/propuestas/registro-de-ventas.md`](../propuestas/registro-de-ventas.md), para cuando el equipo quiera discutirlo.
+**Como** administrador, **quiero** saber qué producto se vende más **para** decidir qué reponer y detectar los de mayor rotación (el problema que hoy no se puede resolver con cuadernos).
+
+> ✅ **Backend implementado** (2026-09-20): `GET /reportes/productos-mas-vendidos` (`src/gedenaz/api/reportes.py`), con `desde`, `hasta`, `orden` (`unidades` | `ingresos`) y `limite` (1–100, por defecto 10). Contrato con ejemplos en [06-referencia-api.md](06-referencia-api.md). Falta la pantalla Android. Pendiente de llevar a producción con "Manual Deploy" en Render.
+
+**Funciones**
+
+- Ranking de productos por **unidades vendidas** (de mayor a menor), calculado sobre las ventas registradas (RF5).
+- Filtro opcional por **rango de fechas** (`desde` / `hasta`, ambos inclusive, por día).
+- Cada fila del ranking incluye: producto, categoría, unidades vendidas e ingresos generados.
+- Orden alternativo por **ingresos** — la aproximación de "productos más rentables" del informe: no se registra el costo de los productos, así que no se puede calcular ganancia real.
+
+**Criterios de aceptación**
+
+- El primer elemento del ranking es el producto más vendido del período consultado; ante un empate en unidades, desempata el nombre (orden alfabético, para que el resultado sea estable).
+- Los productos **dados de baja** que tuvieron ventas siguen apareciendo (es historia de ventas, no inventario actual).
+- Los ingresos usan el **precio al momento de cada venta**, no el precio actual del producto (ver RF5 y [02-modelo-de-datos.md](02-modelo-de-datos.md)).
+- Sin ventas en el período, el resultado es una lista vacía (no un error). La app debe mostrar "sin ventas en este período".
+- Un rango inválido (fecha mal escrita, o `desde` posterior a `hasta`) se rechaza con un error de validación.
+
+---
+
+## RF5 — Registrar venta
+
+> **Requisito de apoyo de RF3.1** — no figura en el informe original. Se agrega porque el reporte necesita datos de origen: hoy el sistema solo guarda el stock actual y ninguna venta deja rastro.
+
+**Como** administrador, **quiero** registrar una venta (uno o varios productos) **para** que el stock se descuente automáticamente y quede el historial de qué se vendió, a qué precio y cuándo.
+
+> ✅ **Backend implementado** (2026-09-20): `POST /ventas`, `GET /ventas` (filtro `desde`/`hasta`) y `GET /ventas/<id>` (`src/gedenaz/api/ventas.py`). Stock insuficiente responde `409`; datos inválidos o producto inexistente, `400` nombrando la línea (`items[1].cantidad`). Cubierto por un test de concurrencia (dos ventas simultáneas de la última unidad: una gana, la otra recibe "sin stock"). Contrato con ejemplos en [06-referencia-api.md](06-referencia-api.md). Falta la pantalla Android. Pendiente de llevar a producción con "Manual Deploy" en Render.
+
+**Entrada**: una lista de líneas, cada una con `producto_id` y `cantidad` (una venta puede llevar varios productos distintos, como una boleta real).
+
+**Criterios de aceptación**
+
+- La venta debe tener **al menos una línea**. Cada `producto_id` debe existir y estar activo; cada `cantidad` es un entero ≥ 1; **no se repite** un mismo producto en dos líneas de la misma venta.
+- **No se puede vender más que el stock disponible**: si alguna línea lo excede, la venta completa se rechaza y **no cambia nada** (ni stock ni registros).
+- La venta se guarda **en bloque, todo o nada**: la cabecera, todas sus líneas y el descuento de stock ocurren en una sola transacción — nunca queda una venta a medias ni un stock descuadrado.
+- Cada línea guarda el **precio unitario vigente en ese instante** (una "foto"): si después cambia el precio del producto, las ventas ya registradas no se alteran.
+- Al éxito, se devuelve la venta completa: id, fecha, líneas (con nombre, cantidad, precio unitario y subtotal) y total.
+- Las ventas se pueden **consultar** (una por id, o el listado con filtro por rango de fechas) pero **no se editan ni se eliminan** en esta versión. Si hubo un error al registrar, hoy la corrección es manual (ajustar el stock con RF3); la venta errónea queda en el historial — límite conocido, anular ventas queda fuera de alcance.
+- RF5 es una acción **distinta de RF3**: RF3 sigue siendo para correcciones de inventario ("conté mal el stock"), no para registrar ventas.
+
+> Origen del diseño: [`docs/propuestas/registro-de-ventas.md`](../propuestas/registro-de-ventas.md) (adoptada por el equipo el 2026-09-20).
 
 ---
 
@@ -100,7 +141,8 @@ Generación de reportes de ventas o productos más rentables. Queda como **traba
 |---|---|---|
 | Fase 1 · Avance #1 | RF1 (Crear) | H2 — Entrega Avance #1 |
 | Fase 2 · Avance #2 | RF2 (Leer) | H3 — Entrega Avance #2 |
-| Fase 3 · Avance #3 | RF3 + RF4 (Actualizar, Eliminar) | H4 — Avance #3, proyecto funcionalmente terminado |
+| Fase 3 · Avance #3 | RF3 + RF3.1 + RF4 (Actualizar, Reporte de producto más vendido, Eliminar) | H4 — Avance #3, proyecto funcionalmente terminado |
+| _(fuera del Gantt oficial)_ | RF5 (Registrar venta) — prerrequisito de RF3.1 | Se adelanta junto con RF3.1; el Gantt no lo lista como tarea propia |
 | Fase 4 · Cierre | Pruebas de regresión, manual de usuario, video demo | H6 — Entrega Informe Final |
 
 Ver detalle completo de fechas y responsables en [04-plan-de-trabajo.md](04-plan-de-trabajo.md).

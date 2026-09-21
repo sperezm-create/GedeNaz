@@ -2,7 +2,7 @@
 
 Este directorio va a contener la app Android que consume la API en `src/gedenaz/` (ver [docs/specs/03-arquitectura.md](../docs/specs/03-arquitectura.md)).
 
-**El backend (RF1-RF4) ya está completo y en producción**: `https://gedenaz-api.onrender.com`. El contrato HTTP completo (endpoints, formato de cada request/response, formato de errores) está en [docs/specs/06-referencia-api.md](../docs/specs/06-referencia-api.md) — léanlo antes de empezar a programar el networking de la app, sea cual sea el framework elegido.
+**El backend está completo** (inventario RF1–RF4, ventas RF5 y reporte de producto más vendido RF3.1): `https://gedenaz-api.onrender.com`. *(Ventas y reportes están en el código y en el contrato, pero llegan a esa URL con el próximo "Manual Deploy" en Render — hasta entonces producción solo tiene inventario.)* El contrato HTTP completo (endpoints, formato de cada request/response, formato de errores) está en [docs/specs/06-referencia-api.md](../docs/specs/06-referencia-api.md) — léanlo antes de empezar a programar el networking de la app, sea cual sea el framework elegido.
 
 ## Pendiente
 

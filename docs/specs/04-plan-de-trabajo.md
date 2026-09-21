@@ -4,6 +4,8 @@
 >
 > **Nota (2026-09-09)**: la tabla de abajo es una transcripción fiel de la Carta Gantt oficial, que fue armada pensando en una app de escritorio. Tras la corrección de alcance a app Android ([00-vision-y-alcance.md](00-vision-y-alcance.md)), donde diga "interfaz de escritorio" o "formulario de escritorio" léase "pantalla Android"; donde diga "conexión Python–MySQL" léase "API Python que conecta con MySQL" ([03-arquitectura.md](03-arquitectura.md)). Las fechas, responsables y RF asociados no cambian — no se editó la tabla para no perder la trazabilidad con el documento oficial entregado.
 
+> **Nota (2026-09-20) — RF3.1 está en alcance**: la tarea 3.7 ya figuraba en la Carta Gantt oficial (Fase 3, "RF3-RF3.1-RF4"); en una versión anterior de esta transcripción se había anotado "trabajo futuro" siguiendo el texto del informe, lo que era incorrecto y se corrigió. El equipo confirmó con el cliente que RF3.1 (producto más vendido) es un requerimiento real. Para poder reportar hace falta registrar ventas (**RF5**), que **no tiene tarea propia en el Gantt oficial** — se implementó adelantado, junto con 3.7, por lo que no mueve ningún hito. Ver [01-requisitos-funcionales.md](01-requisitos-funcionales.md).
+
 ## Roles del equipo
 
 | Integrante | Rol |
@@ -62,7 +64,7 @@ Decisiones relevantes (alcance, diseño, prioridades) se toman en conjunto por c
 | 3.4 | Implementar lógica de borrado (DELETE) en MySQL | Francisco Jara | 2026-10-30 | 2026-11-03 |
 | 3.5 | Pruebas integrales de las 4 operaciones CRUD (RF1–RF4) | Todo el equipo | 2026-11-03 | 2026-11-07 |
 | 3.6 | Corrección de errores y pulido de la interfaz | Sebastian Perez | 2026-11-05 | 2026-11-09 |
-| 3.7 | Generación de reportes analíticos (RF3.1) — trabajo futuro | Nicolas Silva | 2026-11-08 | 2026-11-10 |
+| 3.7 | Generación de reportes analíticos de ventas o productos más rentables (RF3.1) | Nicolas Silva | 2026-11-08 | 2026-11-10 |
 | 3.7b | Redactar y revisar Informe Avance #3 | Nicolas Silva | 2026-11-08 | 2026-11-10 |
 
 ## Fase 4 · Cierre — 2026-11-12 a 2026-12-02

@@ -5,23 +5,7 @@ datos.
 """
 
 from gedenaz.data import productos as productos_repo
-
-
-class ValidationError(Exception):
-    """Se lanza cuando los datos de un producto no cumplen RF1/RF3.
-
-    `errores` es un dict {campo: mensaje}, pensado para devolverse tal
-    cual como JSON en la respuesta 400 de la API.
-    """
-
-    def __init__(self, errores: dict[str, str]):
-        self.errores = errores
-        super().__init__(str(errores))
-
-
-class NotFoundError(Exception):
-    """Se lanza cuando se pide un producto (por id) que no existe o ya
-    esta dado de baja -- la API lo traduce a un 404."""
+from gedenaz.logic.errores import NotFoundError, ValidationError
 
 
 def _validar_nombre(nombre) -> str | None:

@@ -62,9 +62,9 @@ Proyecto/
 │       ├── main.py             # Punto de entrada del backend (arranca la API Flask)
 │       ├── app.py              # Fábrica de la app Flask (create_app)
 │       ├── config.py           # Carga de configuración/.env
-│       ├── api/                # Endpoints HTTP (Flask) — reemplaza lo que antes era ui/
-│       ├── logic/               # Reglas de negocio y validaciones (independiente de Flask)
-│       └── data/                 # Acceso a datos MySQL (repositorio de Producto) + schema.sql
+│       ├── api/                # Endpoints HTTP (Flask): productos.py, ventas.py, reportes.py, respuestas.py (sobre de error)
+│       ├── logic/               # Reglas de negocio y validaciones (independiente de Flask): productos, ventas, reportes, filtros, errores
+│       └── data/                 # Acceso a datos MySQL: db.py, productos.py, ventas.py, reportes.py + schema.sql / schema_cloud.sql
 ├── tests/                      # Pruebas con pytest, en espejo de src/gedenaz
 ├── .env.example                # Plantilla de variables de entorno (sin credenciales reales)
 ├── .gitignore
@@ -79,6 +79,10 @@ Proyecto/
 - `api/` solo traduce HTTP↔Python: recibe la request, llama a `logic/`, devuelve JSON. No contiene SQL ni reglas de negocio.
 - `logic/` contiene las validaciones de [01-requisitos-funcionales.md](01-requisitos-funcionales.md) (campos obligatorios, tipos de dato, stock no negativo, etc.) y orquesta llamadas a `data/`. No importa nada de `flask` — se puede probar con `pytest` sin levantar un servidor HTTP.
 - `data/` es la única capa que habla con MySQL (usa `mysql-connector-python`); expone funciones tipo repositorio (`crear_producto`, `listar_productos`, `obtener_producto`, `actualizar_producto`, `actualizar_producto_parcial`, `eliminar_producto`) que reflejan el esquema de [02-modelo-de-datos.md](02-modelo-de-datos.md). **Estado** (2026-09-16): ✅ **CRUD completo implementado** (`data/db.py` + `data/productos.py`) y probado contra Aiven en producción (RF1-RF4). `listar_productos`/`obtener_producto` filtran siempre por `activo = 1`; `eliminar_producto` es baja lógica (`UPDATE activo = 0`, nunca `DELETE`).
+  - **Ventas y reportes** (2026-09-20, RF5 y RF3.1): `data/ventas.py` (`registrar_venta`, `obtener_venta`, `listar_ventas`) y `data/reportes.py` (`productos_mas_vendidos`). `registrar_venta` es **una sola transacción** con `SELECT ... FOR UPDATE` sobre los productos (en orden de `id`), y lanza excepciones propias de la capa de datos (`ProductoNoDisponibleError`, `StockInsuficienteError`) que `logic/ventas.py` traduce a `ValidationError` (400) / `ConflictError` (409) — `data/` nunca importa de `logic/`. Las excepciones de negocio compartidas viven en `logic/errores.py`.
+  - **Zona horaria**: `data/db.py` abre cada conexión con la sesión en hora de Chile (`DB_TIMEZONE`, por defecto `America/Santiago`). Se pasa a MySQL como **desfase numérico** (`-03:00`), calculado con `zoneinfo` en cada conexión (respeta el horario de verano), y no como nombre de zona: un nombre exige que el servidor tenga cargadas las tablas de zonas horarias, cosa que un MySQL local en Windows normalmente no tiene. Por eso `tzdata` está en `requirements.txt` (Windows no trae base de zonas horarias).
   - **Detalle importante de MySQL**: ninguna función usa `cursor.rowcount` para decidir "el producto no existe" — por defecto, MySQL reporta filas *cambiadas*, no filas que matchearon el `WHERE` (si mandas el mismo valor que ya había, `rowcount` da 0 aunque el producto exista). `actualizar_producto`/`actualizar_producto_parcial` confirman la existencia con un `SELECT` aparte después del `UPDATE`, nunca con `rowcount`. (Bug real encontrado y corregido el 2026-09-16 — ver bitácora.)
+
+> Los archivos `schema.sql` y `schema_cloud.sql` tienen las mismas tres tablas (`producto`, `venta`, `detalle_venta`) y hay que **mantenerlos sincronizados**. `schema_cloud.sql` es idempotente: se puede re-ejecutar (`python scripts/apply_schema.py src/gedenaz/data/schema_cloud.sql`) para sumar tablas nuevas a una base que ya existe.
 
 Esta separación es la misma que ya existía en la versión de escritorio, solo que `ui/` (Tkinter) se reemplazó por `api/` (Flask) — `logic/` y `data/` no cambiaron de lugar ni de responsabilidad.

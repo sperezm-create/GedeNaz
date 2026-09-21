@@ -4,11 +4,11 @@
 >
 > **Cómo se mantiene**: este documento se **reescribe/actualiza en el sitio** cada vez que cambia algo importante (no se acumulan versiones viejas acá). El historial detallado de qué se hizo sesión a sesión vive en [`BITACORA.md`](BITACORA.md) — ese sí es un registro cronológico que solo crece.
 >
-> **Última actualización**: 2026-09-16.
+> **Última actualización**: 2026-09-20.
 
 ## En una frase
 
-GedeNaz App es una app **Android** (backend en Python + MySQL) para que Gedalias y Nazareth (dueños de una joyería) manejen su inventario (crear, ver, editar, eliminar productos) desde sus teléfonos, viendo siempre el mismo stock, sin cuadernos ni planillas sueltas.
+GedeNaz App es una app **Android** (backend en Python + MySQL) para que Gedalias y Nazareth (dueños de una joyería) manejen su inventario (crear, ver, editar, eliminar productos) y registren sus ventas desde sus teléfonos, viendo siempre el mismo stock y pudiendo saber qué producto se vende más, sin cuadernos ni planillas sueltas.
 
 > ⚠️ El informe entregado el 2026-09-09 dice "aplicación de escritorio" — eso quedó corregido el mismo día, antes de empezar a programar nada más allá del entorno base. Ver "Estado actual" abajo.
 
@@ -21,13 +21,15 @@ GedeNaz App es una app **Android** (backend en Python + MySQL) para que Gedalias
 | Cristóbal Sierra Porras | Documentación de informes |
 | **Nicolas Silva** (`goost01` en GitHub, es con quien trabajo yo) | Interfaz de usuario + apoyo en pruebas |
 
-## Las 4 funciones del sistema (alcance)
+## Las funciones del sistema (alcance)
 
 - **RF1 Crear**: registrar producto nuevo (nombre, categoría, precio, stock inicial).
 - **RF2 Leer**: listar, buscar/filtrar por nombre o categoría, ver detalle.
 - **RF3 Actualizar**: editar datos y ajustar stock (nunca negativo).
 - **RF4 Eliminar**: dar de baja un producto, con confirmación antes de borrar.
-- Todo lo demás (venta online, pagos, reportes de ventas) queda **fuera de alcance** por ahora.
+- **RF3.1 Producto más vendido**: ranking por unidades (o por ingresos) sobre las ventas registradas, con filtro de fechas. **Dentro del alcance desde 2026-09-20**: el informe lo llamaba "trabajo futuro" pero el equipo aclaró que lo pidió el cliente.
+- **RF5 Registrar venta**: una venta con uno o varios productos, descuenta stock, guarda el precio del momento. Requisito de apoyo de RF3.1 (no está en el informe ni en el Gantt oficial).
+- Fuera de alcance: venta online, pagos, anular/editar ventas, utilidad real (no hay costos registrados).
 
 Detalle completo con criterios de aceptación: [`specs/01-requisitos-funcionales.md`](specs/01-requisitos-funcionales.md).
 
@@ -37,9 +39,9 @@ Detalle completo con criterios de aceptación: [`specs/01-requisitos-funcionales
 - **Datos**: se mantiene **MySQL** (el equipo lo confirmó tras evaluar alternativas locales/SQLite), pero la app **nunca** se conecta directo a la base — no es seguro guardar credenciales de MySQL dentro de un APK.
 - **Arquitectura**: por eso hay una API en el medio — `App Android → API (Flask) → MySQL`. Dentro de la API: `api/` (endpoints HTTP) → `logic/` (reglas de negocio/validaciones) → `data/` (acceso a MySQL). Ver [`specs/03-arquitectura.md`](specs/03-arquitectura.md) para el detalle y el porqué.
 - **Hosting**: **Aiven** para MySQL + **Render** para el backend Flask (decisión confirmada 2026-09-16, corrigiendo a PythonAnywhere del mismo día — ver nota abajo). Ambos gratis, sin tarjeta. Se descartaron PythonAnywhere (MySQL pasó a ser de pago desde enero 2026, y sus cuentas gratis ni siquiera pueden conectarse a una base externa), PlanetScale y Railway (no son gratis de forma sostenida). Guía paso a paso para montar la base en Aiven: [`specs/05-entorno-desarrollo.md`](specs/05-entorno-desarrollo.md#8-desplegar-la-base-de-datos-en-aiven).
-- **Base de datos**: una sola tabla relevante por ahora, `producto` (ver [`specs/02-modelo-de-datos.md`](specs/02-modelo-de-datos.md)) — el esquema no cambió por el paso a Android.
+- **Base de datos**: tres tablas — `producto`, `venta` (cabecera) y `detalle_venta` (líneas, con el precio como "foto" del momento) — ver [`specs/02-modelo-de-datos.md`](specs/02-modelo-de-datos.md). Las fechas se guardan en **hora de Chile** (no UTC) desde 2026-09-20.
 
-## Estado actual (2026-09-16)
+## Estado actual (2026-09-20)
 
 - ✅ Specs escritas en `docs/specs/` (visión, requisitos, modelo de datos, arquitectura, plan de trabajo, entorno).
 - ✅ Repo Git local inicializado, con commit inicial + merge con el repo remoto del equipo. Acceso a GitHub resuelto (Sebastián agregó a `goost01`), todo subido a `https://github.com/sperezm-create/GedeNaz.git` (rama `main`).
@@ -55,13 +57,18 @@ Detalle completo con criterios de aceptación: [`specs/01-requisitos-funcionales
 - ✅ **Documentación de la API lista**: [`specs/06-referencia-api.md`](specs/06-referencia-api.md) — contrato HTTP completo, verificado contra el servidor real. Se unificó el formato de errores (antes inconsistente entre `400` y `404`) antes de que alguien escribiera código Android dependiendo de la forma vieja.
 - ✅ **`PATCH /productos/<id>`** agregado para actualizar un solo campo (ej. stock) sin reenviar todo el producto (`PUT` se mantiene para reemplazo completo). De paso se encontró y corrigió un **bug real ya en producción**: actualizar un producto con los mismos valores que ya tenía hacía que la API devolviera un `404` falso (por cómo MySQL cuenta filas "cambiadas" vs. "encontradas"). 41 tests en verde. Ver [`BITACORA.md`](BITACORA.md) para el detalle técnico.
 - ✅ Base sembrada con 6 productos de prueba (2 anillos, 2 collares, 1 pulsera, 1 aro) en `https://gedenaz-api.onrender.com`.
-- ⏳ El backend está funcionalmente completo. Lo único que falta para tener el sistema completo es la **app Android** (bloqueada por la decisión de framework). **Pendiente**: hacer "Manual Deploy" en Render para que el cambio de formato de errores llegue a producción.
+- ✅ **Ventas y reporte de producto más vendido implementados en el backend (2026-09-20)**: `POST/GET /ventas`, `GET /ventas/<id>` y `GET /reportes/productos-mas-vendidos`. Registrar una venta es una transacción atómica con bloqueo de filas (probado con un test de concurrencia). **120 tests en verde.** Spec-first: `00`, `01`, `02`, `04` y `06` actualizados antes del código. Detalle y decisiones por defecto en [`BITACORA.md`](BITACORA.md).
+- ⚠️ **Aiven se apaga solo tras pocos días sin uso** (pasó tras ~4 días, fiestas patrias). Los datos no se pierden; hay que encenderlo en la consola de Aiven ("Power on"). Síntoma: `/health/db` responde `503`. **Revisarlo antes de cualquier demo o entrega.**
+- ⏳ **Producción (Render) todavía corre la versión anterior**: hace falta "Manual Deploy" para llevar ventas, reportes y `tzdata`. La base de Aiven ya tiene las tablas nuevas (no rompen la versión vieja).
+- ⚠️ **Riesgo abierto: la API no tiene autenticación** y su URL es pública (está en el README del repo público); ahora además expone ventas. Anotado en `02-modelo-de-datos.md` (mínimo recomendado: API key compartida) — no implementado.
+- ⏳ El backend está funcionalmente completo (RF1–RF5 y RF3.1). Lo único que falta para tener el sistema completo es la **app Android** (bloqueada por la decisión de framework).
 
 ## Próximos pasos
 
 1. **Decidir el framework de la app Android** (todo el equipo) — ver `mobile/README.md`. Es el único bloqueante real que queda: el backend (RF1-RF4) ya está completo y en producción, esperando a que exista una app que lo consuma.
 2. Avisarle al equipo (Francisco, Sebastian, Cristóbal) que las tareas 1.3, 1.5, 1.6 y todo el resto del CRUD (Fases 2 y 3 del plan) ya quedaron avanzadas y desplegadas — revisar `src/gedenaz/{data,logic,api}/` antes de seguir, para no duplicar trabajo.
-3. Presentarle al equipo la propuesta de registro de ventas ([`propuestas/registro-de-ventas.md`](propuestas/registro-de-ventas.md)) si quieren discutirla.
+3. Hacer "Manual Deploy" en Render para que producción tenga ventas y reportes, y verificar `/health/db` (Aiven puede haberse apagado).
+   Decidir con el equipo si agregan una API key antes de que la app o alguien externo use la API.
 4. **Recordatorio permanente**: el deploy en Render no es automático (repo público, sin conexión a GitHub) — después de cada push a `main` que quieran llevar a producción, hay que entrar al panel de Render y apretar "Manual Deploy".
 
 Cronograma completo con fechas: [`specs/04-plan-de-trabajo.md`](specs/04-plan-de-trabajo.md).
@@ -73,7 +80,7 @@ docs/
   MEMORIA_PROYECTO.md   ← este archivo (estado actual, se reescribe)
   BITACORA.md           ← registro cronológico de sesiones (solo crece)
   specs/                ← especificaciones spec-first (00 a 06)
-  propuestas/            ← ideas discutidas pero no decididas (ej. registro de ventas)
+  propuestas/            ← ideas discutidas pero no decididas (ej. registro de ventas — ya adoptada, conservada como historial)
 mobile/                  ← app Android (framework pendiente de decisión)
 scripts/                 ← utilidades (ej. apply_schema.py — correr un .sql contra la base del .env)
 src/gedenaz/             ← backend / API (api / logic / data)

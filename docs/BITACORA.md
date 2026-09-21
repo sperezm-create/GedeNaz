@@ -4,6 +4,38 @@
 
 ---
 
+## 2026-09-20 — RF3.1 (producto más vendido) entra al alcance: ventas implementadas
+
+**Contexto**: tras las fiestas patrias, Nicolas presentó la propuesta de registro de ventas al grupo. El equipo aclaró que **RF3.1 no es "trabajo futuro" sino un requerimiento pedido por el cliente** (buscar el producto más vendido), y aprobó el modelo cabecera/detalle (`venta` + `detalle_venta`). Se trabajó spec-first: primero las specs, después el código.
+
+**Aiven apagado por inactividad**: al arrancar, la base no resolvía (`Unknown MySQL server host`; `/health/db` de Render daba `503` mientras `/health` daba `200`). El plan gratis apagó el servicio tras solo ~4 días sin uso, no "semanas" como se había documentado. Nicolas lo encendió a mano desde la consola; los 6 productos de prueba sobrevivieron. Se corrigió `05-entorno-desarrollo.md` (plazo real, cómo reconocerlo, cómo encenderlo).
+
+**Specs** (todas antes del código): `00` (aclaración de alcance, RF3.1 dentro, RF5 nuevo, "anular ventas" y "utilidad real" fuera), `01` (RF3.1 reescrito como requisito vigente + RF5 nuevo), `02` (entidades `venta`/`detalle_venta` + decisiones 4–9), `04` (ver abajo), `06` (contrato de `/ventas` y `/reportes`, código `409`). La propuesta quedó marcada como adoptada (se conserva como registro del razonamiento).
+
+**Decisiones tomadas por defecto** (Nicolas puede cambiarlas): ventas **inmutables** (sin editar/anular; un error se corrige a mano con el stock, límite conocido); un mismo producto **no se repite** en dos líneas; `fecha_venta` solo en `venta` (reportes hacen `JOIN`); "más rentable" = **ingresos** porque no hay costo registrado; RF5 es una acción distinta de RF3.
+
+**Código**: `data/ventas.py` (`registrar_venta` en una sola transacción con `SELECT ... FOR UPDATE` en orden de `id`), `data/reportes.py`, `logic/ventas.py`, `logic/reportes.py`, `logic/filtros.py`, `logic/errores.py` (excepciones compartidas + `ConflictError`), `api/ventas.py`, `api/reportes.py`, `api/respuestas.py` (helper del sobre de error). Endpoints: `POST/GET /ventas`, `GET /ventas/<id>`, `GET /reportes/productos-mas-vendidos`.
+
+**Zona horaria**: Aiven guarda en UTC, así que una venta a las 21:30 en Chile habría caído "al día siguiente" en los reportes por día. Cada conexión fija ahora la hora de Chile (`DB_TIMEZONE`, por defecto `America/Santiago`). Se pasa como **desfase numérico** (`-03:00`) calculado con `zoneinfo`, no como nombre de zona, porque un nombre exige tablas de zonas horarias en el servidor y un MySQL local en Windows normalmente no las tiene. Se agregó `tzdata` a `requirements.txt`. Las filas previas al 2026-09-20 (los 6 productos sembrados) siguen en UTC; nada depende de eso.
+
+**Esquema**: los índices de `producto` pasaron a estar dentro del `CREATE TABLE` (MySQL no soporta `CREATE INDEX IF NOT EXISTS`), con lo que `schema_cloud.sql` es re-ejecutable; se aplicó a Aiven y creó solo las tablas nuevas. `scripts/apply_schema.py` ahora ignora líneas de comentario antes de separar por `;`.
+
+**Errores propios encontrados y corregidos**: (1) en `04-plan-de-trabajo.md` había transcrito la tarea 3.7 como "trabajo futuro" — la Carta Gantt oficial **no** dice eso (el informe sí, en RF3.1); se corrigió y se anotó que RF5 no tiene tarea propia en el Gantt oficial; (2) un ejemplo de `POST /ventas` en `06` tenía un total mal sumado (47 970 en vez de 44 970), detectado al compararlo con la respuesta real; (3) un producto de prueba inactivo (id 93, de mi `curl` del 16-09, dado de baja pero no borrado) seguía en la tabla porque mis conteos filtraban `activo = 1`; se borró.
+
+**Tests**: de 41 a **120** (75 nuevos sin base de datos + los de integración de ventas y reportes). Incluye un test de concurrencia real (dos hilos venden la última unidad: uno gana, el otro recibe "sin stock"), la prueba de que un rechazo no guarda nada, que el precio queda como "foto", que la fecha sale en hora de Chile, y el ranking (orden, desempate, productos dados de baja, rango de fechas). Base confirmada limpia después (6 productos, 0 ventas). Verificado además con `curl` contra la API local.
+
+**Pendiente**: "Manual Deploy" en Render (sin auto-deploy) para llevar ventas, reportes y `tzdata` a producción. **Riesgo abierto**: la API sigue **sin autenticación** y su URL es pública (está en el README del repo público); ahora además expone datos de ventas. Ya estaba anotado en `02-modelo-de-datos.md` (API key compartida como mínimo) — no se implementó.
+
+---
+
+## 2026-09-16 (cont. 11) — Revisión de la propuesta de ventas: modelo cabecera/detalle
+
+Nicolas preguntó qué pasaría si una venta incluyera más de un producto, y si convenía un campo `id_productos` con una lista de ids. Se descartó esa idea: una lista serializada en un solo campo rompe la primera forma normal (sin `FOREIGN KEY` real, sin `cantidad`/`precio_unitario` por producto, sin `GROUP BY` directo para los reportes de RF3.1).
+
+Se corrigió [`docs/propuestas/registro-de-ventas.md`](propuestas/registro-de-ventas.md) (creada en la sesión anterior) al modelo estándar de cabecera/detalle: `venta` (id, fecha) + `detalle_venta` (venta_id, producto_id, cantidad, precio_unitario), en vez de una sola tabla `venta` con `producto_id` único. `precio_unitario` como "foto" del precio al momento de la venta se mantiene igual, solo que ahora vive en `detalle_venta`. Sigue siendo una propuesta no decidida, en `docs/propuestas/`, sin tocar el modelo de datos actual ni el código.
+
+---
+
 ## 2026-09-16 (cont. 10) — PATCH para actualización parcial + bug de rowcount corregido
 
 Nicolas preguntó si RF3 (`PUT`) podía evitar tener que mandar los 4 campos para actualizar solo uno (ej. ajustar stock). Se acordó: `PATCH` nuevo para actualización parcial, `PUT` se mantiene para reemplazo completo.

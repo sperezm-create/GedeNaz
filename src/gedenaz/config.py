@@ -26,6 +26,9 @@ class DBConfig:
     # si no tira "Invalid ssl-mode" -- mismo error que da MySQL Workbench
     # si el "Use SSL" no se pone en "Require and Verify CA".
     ssl_ca: str | None = None
+    # Zona horaria (nombre IANA) en la que se guardan las fechas. Ver
+    # data/db.py::get_connection.
+    time_zone: str = "America/Santiago"
 
 
 def get_db_config() -> DBConfig:
@@ -36,4 +39,5 @@ def get_db_config() -> DBConfig:
         password=os.getenv("DB_PASSWORD", ""),
         database=os.getenv("DB_NAME", "gedenaz"),
         ssl_ca=os.getenv("DB_SSL_CA") or None,
+        time_zone=os.getenv("DB_TIMEZONE") or "America/Santiago",
     )

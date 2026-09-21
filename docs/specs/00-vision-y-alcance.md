@@ -5,9 +5,11 @@
 >
 > **⚠️ Corrección de alcance (2026-09-09, posterior a la entrega del informe)**: el equipo decidió que GedeNaz App **no es una aplicación de escritorio, es una aplicación móvil para Android**. El informe ya entregado dice "aplicación de escritorio" — ese texto queda desactualizado a partir de esta decisión; ver [BITACORA.md](../BITACORA.md) para el detalle de cuándo y por qué se corrigió. Se mantiene **Python + MySQL** como pidió el equipo, pero MySQL ahora vive detrás de una API (ver [03-arquitectura.md](03-arquitectura.md)) en vez de ser accedido directo por la app, porque un cliente móvil no debe guardar credenciales de base de datos.
 
+> **⚠️ Aclaración de alcance (2026-09-20)**: el informe marca **RF3.1 (reportes de ventas / producto más vendido) como "trabajo futuro"**. El equipo aclaró que eso es un error de clasificación: **RF3.1 es un requerimiento pedido por el cliente**, no una mejora futura — queda **dentro del alcance**. Como no se puede reportar sobre ventas que nunca se registraron, esto trae un requisito de apoyo, **RF5 (registrar venta)**, que el informe no contemplaba explícitamente. Modelo de datos adoptado: `venta` + `detalle_venta` (ver [02-modelo-de-datos.md](02-modelo-de-datos.md) y la propuesta original en [`../propuestas/registro-de-ventas.md`](../propuestas/registro-de-ventas.md)).
+
 ## Resumen
 
-GedeNaz App es una **aplicación móvil para Android**, con un backend en **Python** y **MySQL** como base de datos, para la empresa GedeNaz (comercialización de joyas y accesorios). Permite a sus dos administradores, **Gedalias** y **Nazareth**, gestionar el inventario mediante las cuatro operaciones CRUD (crear, leer, actualizar, eliminar) sobre una base de datos centralizada, reemplazando los registros manuales (cuadernos/planillas) actualmente en uso. La centralización es el punto clave: ambos administradores deben ver el mismo inventario en tiempo real desde sus propios teléfonos, por eso los datos no viven solo en el dispositivo (ver [El problema](#el-problema)).
+GedeNaz App es una **aplicación móvil para Android**, con un backend en **Python** y **MySQL** como base de datos, para la empresa GedeNaz (comercialización de joyas y accesorios). Permite a sus dos administradores, **Gedalias** y **Nazareth**, gestionar el inventario mediante las cuatro operaciones CRUD (crear, leer, actualizar, eliminar) sobre una base de datos centralizada, reemplazando los registros manuales (cuadernos/planillas) actualmente en uso. Además, registra las ventas y permite consultar **qué producto se vende más** (RF3.1, pedido por el cliente). La centralización es el punto clave: ambos administradores deben ver el mismo inventario en tiempo real desde sus propios teléfonos, por eso los datos no viven solo en el dispositivo (ver [El problema](#el-problema)).
 
 ## La empresa
 
@@ -44,8 +46,9 @@ Desarrollar una aplicación móvil para Android para GedeNaz, con backend en Pyt
 | RF1 | Crear | Registrar nuevos productos (nombre, precio, stock inicial, categoría) |
 | RF2 | Leer | Listar, buscar/filtrar por nombre o categoría, ver detalle |
 | RF3 | Actualizar | Editar datos de un producto y ajustar stock |
-| RF3.1 | Reportes | Reportes analíticos de ventas/productos más rentables — **trabajo futuro, fuera del alcance actual** |
+| RF3.1 | Reportes | **Producto más vendido** (ranking por unidades, y por ingresos como aproximación de "más rentable") — **dentro del alcance, pedido por el cliente** (aclarado 2026-09-20) |
 | RF4 | Eliminar | Dar de baja productos, con confirmación |
+| RF5 | Registrar venta | Registrar una venta con uno o varios productos, descontando el stock. **Requisito de apoyo de RF3.1** (sin ventas registradas no hay qué reportar) |
 
 ## Alcance — fuera
 
@@ -54,21 +57,22 @@ Desarrollar una aplicación móvil para Android para GedeNaz, con backend en Pyt
 - Catálogo público para clientes finales.
 - Gestión de pedidos, despacho o seguimiento de compras.
 - Multiusuario con roles diferenciados (solo existe el rol "administrador").
-- Reportes analíticos (RF3.1) en esta primera versión.
+- Anular o editar una venta ya registrada (las ventas son inmutables en esta versión).
+- Utilidad real (ganancia = ingreso − costo): no se registra el **costo** de los productos, así que "más rentable" se aproxima con el ingreso generado.
 
-El alcance se acotó deliberadamente a las 4 operaciones CRUD, considerando el tiempo disponible del semestre y que GedeNaz es administrada por solo dos personas: se prioriza una solución simple, mantenible y realmente utilizable por el negocio.
+El alcance se acotó deliberadamente a las operaciones CRUD de inventario, el registro de ventas y un único reporte (producto más vendido), considerando el tiempo disponible del semestre y que GedeNaz es administrada por solo dos personas: se prioriza una solución simple, mantenible y realmente utilizable por el negocio.
 
 ## Consecuencias esperadas del sistema
 
 - Elimina los registros manuales del inventario, reduciendo errores de digitación y descuadres entre lo registrado y el stock real.
 - Gedalias y Nazareth consultan y actualizan el mismo inventario centralizado en MySQL desde sus propios teléfonos, sin depender de comunicarse para confirmar disponibilidad.
 - Mejora la eficiencia operativa (menos tiempo buscando/verificando en bodega) y la confiabilidad de los datos para decisiones diarias.
-- Deja una base ordenada para incorporar a futuro reportes de ventas o de productos más rentables (RF3.1).
+- Resuelve la falta de visibilidad sobre la rotación: con las ventas registradas, el sistema responde qué producto se vende más (RF3.1) en vez de depender de la memoria de los dueños.
 
 ## Documentos relacionados
 
-- [01-requisitos-funcionales.md](01-requisitos-funcionales.md) — detalle y criterios de aceptación de RF1–RF4.
-- [02-modelo-de-datos.md](02-modelo-de-datos.md) — entidad Producto y esquema MySQL.
+- [01-requisitos-funcionales.md](01-requisitos-funcionales.md) — detalle y criterios de aceptación de RF1–RF5 y RF3.1.
+- [02-modelo-de-datos.md](02-modelo-de-datos.md) — entidades Producto, Venta y DetalleVenta, y esquema MySQL.
 - [03-arquitectura.md](03-arquitectura.md) — arquitectura de capas, stack tecnológico, estructura del repo.
 - [04-plan-de-trabajo.md](04-plan-de-trabajo.md) — fases, hitos y roles (derivado de la Carta Gantt).
 - [05-entorno-desarrollo.md](05-entorno-desarrollo.md) — cómo levantar el entorno de desarrollo (entorno virtual, dependencias, MySQL).
