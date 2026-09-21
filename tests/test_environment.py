@@ -18,7 +18,9 @@ def test_paquete_gedenaz_importable():
     from gedenaz import config
 
     db_config = config.get_db_config()
-    assert db_config.database == "gedenaz"
+    # El nombre depende del .env de cada quien (gedenaz, defaultdb, test...):
+    # solo se comprueba que la configuracion cargue.
+    assert db_config.database
 
 
 def test_api_health():

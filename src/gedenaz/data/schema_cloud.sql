@@ -28,13 +28,13 @@ CREATE TABLE IF NOT EXISTS producto (
     CONSTRAINT chk_stock_no_negativo CHECK (stock >= 0),
     INDEX idx_producto_nombre (nombre),
     INDEX idx_producto_categoria (categoria)
-);
+) DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS venta (
     id           INT AUTO_INCREMENT PRIMARY KEY,
     fecha_venta  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     INDEX idx_venta_fecha (fecha_venta)
-);
+) DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS detalle_venta (
     id               INT AUTO_INCREMENT PRIMARY KEY,
@@ -45,4 +45,4 @@ CREATE TABLE IF NOT EXISTS detalle_venta (
     CONSTRAINT fk_detalle_venta FOREIGN KEY (venta_id) REFERENCES venta (id),
     CONSTRAINT fk_detalle_producto FOREIGN KEY (producto_id) REFERENCES producto (id),
     CONSTRAINT chk_cantidad_positiva CHECK (cantidad > 0)
-);
+) DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

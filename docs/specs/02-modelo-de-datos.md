@@ -42,10 +42,10 @@ CREATE TABLE IF NOT EXISTS producto (
     CONSTRAINT chk_stock_no_negativo CHECK (stock >= 0),
     INDEX idx_producto_nombre (nombre),
     INDEX idx_producto_categoria (categoria)
-);
+) DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 ```
 
-Este script vive en `src/gedenaz/data/schema.sql` (Fase 1.2 de la Carta Gantt, responsable: Francisco Jara). Los índices están declarados **dentro** del `CREATE TABLE` (no como `CREATE INDEX` aparte) a propósito: MySQL no soporta `CREATE INDEX IF NOT EXISTS`, y así el archivo completo se puede volver a ejecutar sin error para sumar tablas nuevas a una base que ya existe.
+Cada tabla declara `DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci` de forma **explícita** (ver decisión 10). Este script vive en `src/gedenaz/data/schema.sql` (Fase 1.2 de la Carta Gantt, responsable: Francisco Jara). Los índices están declarados **dentro** del `CREATE TABLE` (no como `CREATE INDEX` aparte) a propósito: MySQL no soporta `CREATE INDEX IF NOT EXISTS`, y así el archivo completo se puede volver a ejecutar sin error para sumar tablas nuevas a una base que ya existe.
 
 ## Entidades: `venta` y `detalle_venta` (RF5, RF3.1)
 
@@ -81,7 +81,7 @@ CREATE TABLE IF NOT EXISTS venta (
     id           INT AUTO_INCREMENT PRIMARY KEY,
     fecha_venta  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     INDEX idx_venta_fecha (fecha_venta)
-);
+) DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS detalle_venta (
     id               INT AUTO_INCREMENT PRIMARY KEY,
@@ -92,7 +92,7 @@ CREATE TABLE IF NOT EXISTS detalle_venta (
     CONSTRAINT fk_detalle_venta FOREIGN KEY (venta_id) REFERENCES venta (id),
     CONSTRAINT fk_detalle_producto FOREIGN KEY (producto_id) REFERENCES producto (id),
     CONSTRAINT chk_cantidad_positiva CHECK (cantidad > 0)
-);
+) DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 ```
 
 MySQL crea solo los índices de las dos claves foráneas, así que no se declaran a mano.
@@ -111,3 +111,4 @@ MySQL crea solo los índices de las dos claves foráneas, así que no se declara
 7. **Las ventas son inmutables** (sin `UPDATE`/`DELETE` en esta versión) y ningún `DELETE` físico de `producto` es posible si tiene ventas (la `FOREIGN KEY` lo impide) — coherente con la baja lógica de la decisión 1: un producto dado de baja conserva su historial de ventas.
 8. **Registrar una venta es una sola transacción** que bloquea las filas de los productos involucrados (`SELECT ... FOR UPDATE`, siempre en orden de `id` para evitar bloqueos cruzados): valida existencia y stock, inserta la cabecera y las líneas, y descuenta el stock. Si algo falla, no queda nada guardado. El bloqueo evita que dos ventas simultáneas del mismo producto vendan más stock del que hay.
 9. **Las fechas se guardan en hora de Chile, no en UTC.** Aiven trabaja en UTC por defecto, y con eso una venta a las 21:30 hora local quedaría registrada "al día siguiente", desajustando los reportes filtrados por día (RF3.1). Cada conexión fija la zona de la sesión (`DB_TIMEZONE`, por defecto `America/Santiago`; ver [03-arquitectura.md](03-arquitectura.md)), así `CURRENT_TIMESTAMP`/`NOW()` ya producen hora local. Las filas anteriores al 2026-09-20 (los productos de prueba sembrados) conservan timestamps en UTC; ninguna regla de negocio depende de ellos.
+10. **La collation se declara explícita en cada tabla** (`utf8mb4_unicode_ci`, no distingue mayúsculas ni tildes). RF2 exige búsqueda "insensible a mayúsculas/minúsculas" y eso lo decide la collation de la columna, no nuestro código. Antes dependía de lo que trajera la base por defecto: Aiven (MySQL 8.4) usa `utf8mb4_0900_ai_ci`, que funciona, pero TiDB usa `utf8mb4_bin`, que **sí distingue mayúsculas** y rompía la búsqueda (detectado el 2026-09-20 al probar TiDB Cloud). Declararla explícita hace el esquema portable entre proveedores. Las tablas que ya existen en Aiven no cambian (`CREATE TABLE IF NOT EXISTS` las omite) y siguen siendo insensibles.

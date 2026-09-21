@@ -4,6 +4,24 @@
 
 ---
 
+## 2026-09-20 (cont.) — Prueba en paralelo de TiDB Cloud Starter como alternativa a Aiven
+
+**Por qué**: Aiven se apagó por inactividad tras ~4 días. Nicolas preguntó por alternativas de hosting MySQL y pidió probar TiDB (MySQL-compatible, serverless, cuota de uso en vez de instancia encendida). Se evaluó también, solo en teoría, migrar a Firebase RTDB, PostgreSQL/Supabase y MongoDB (orden de esfuerzo: Postgres < MongoDB < Firebase); no se implementó nada de eso.
+
+**Cómo se probó sin riesgo**: nuevo selector `GEDENAZ_ENV_FILE` en `config.py` (`GEDENAZ_ENV_FILE=.env.tidb pytest`): con esa variable **no se lee `.env`**, así que nunca se mezclan credenciales. `.env.*` quedó en `.gitignore` (menos `.env.example`). Aiven no se tocó (verificada al final: 6 productos, 0 ventas).
+
+**Render y las IPs** (preocupación de Nicolas, verificada en la documentación): TiDB Starter permite **todas las IPs por defecto** (regla `Allow_all_public_connections`, borrable, hasta 200 reglas), así que Render puede conectarse. Las IPs de salida de Render son rangos compartidos por todos sus clientes de la región, así que restringir por IP no aportaría seguridad real; protegen la contraseña y el TLS obligatorio. **No probado aún desde Render de verdad.**
+
+**Resultado**: conexión con TLS + certificado OK (TiDB v8.5.3 serverless); el desfase numérico de zona horaria funciona igual. Al aplicar el esquema tal cual, los 6 tests nuevos de `tests/data/test_reglas_de_la_base.py` dieron **exactamente los 4 fallos previstos**: (1) collation por defecto `utf8mb4_bin` → la búsqueda de RF2 distinguía mayúsculas; (2–4) `tidb_enable_check_constraint` en `OFF` → los 3 `CHECK` no se aplicaban. Las claves foráneas sí funcionaron. Arreglos: `SET GLOBAL tidb_enable_check_constraint = ON` (Starter lo permite) y **collation explícita** (`utf8mb4_unicode_ci`) en cada `CREATE TABLE` de `schema.sql` y `schema_cloud.sql` (mejora el esquema para cualquier proveedor; las tablas existentes en Aiven no cambian). Tras eso: **126/126 tests pasan en TiDB**, incluido el de concurrencia real (`FOR UPDATE` funciona), en 246 s vs ~280 s en Aiven.
+
+**Otros hallazgos**: `test_paquete_gedenaz_importable` exigía `DB_NAME == "gedenaz"`, lo que solo pasaba por el `.env` de Nicolas (fallaría a quien use `defaultdb`, como dice nuestra guía) — corregido. Las tablas de TiDB se recrearon una vez (los `CHECK` no se guardan si la variable está apagada al crearlas); un `DROP` protegido por una verificación de host para no poder tocar Aiven por error.
+
+**Sin verificar todavía**: si TiDB Starter se pausa/apaga por inactividad (la doc no lo dice), tiempo de arranque en frío, cuántas request units consumió la batería (Nicolas debe mirar la pestaña de uso del panel de TiDB), conexión real desde Render, y latencia Render (¿qué región?) → TiDB en `us-east-1`. **No se decidió migrar**: Aiven sigue siendo la base en uso.
+
+**Specs**: `02` (DDL con collation + decisión 10), `05` (nueva sección 10 "Probar contra otra base" con el resultado de TiDB; tabla de dependencias con `gunicorn` y `tzdata`), `.env.example`.
+
+---
+
 ## 2026-09-20 — RF3.1 (producto más vendido) entra al alcance: ventas implementadas
 
 **Contexto**: tras las fiestas patrias, Nicolas presentó la propuesta de registro de ventas al grupo. El equipo aclaró que **RF3.1 no es "trabajo futuro" sino un requerimiento pedido por el cliente** (buscar el producto más vendido), y aprobó el modelo cabecera/detalle (`venta` + `detalle_venta`). Se trabajó spec-first: primero las specs, después el código.

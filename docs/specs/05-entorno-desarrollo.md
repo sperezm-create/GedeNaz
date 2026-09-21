@@ -49,7 +49,9 @@ Dependencias del proyecto ([03-arquitectura.md](03-arquitectura.md)):
 | `Flask` | Framework de la API que consume la app Android |
 | `mysql-connector-python` | Conector oficial Python↔MySQL (capa `data/`), usado solo por la API |
 | `python-dotenv` | Carga de variables de entorno desde `.env` |
-| `pytest` | Pruebas funcionales del backend (RF1–RF4) |
+| `pytest` | Pruebas del backend (lógica, datos y API) |
+| `gunicorn` | Servidor de producción que usa Render (ver sección 9); en Windows se instala pero no se ejecuta |
+| `tzdata` | Base de zonas horarias: Windows no trae una, y `zoneinfo` la necesita para calcular la hora de Chile (ver `data/db.py`) |
 
 ## 4. Configurar variables de entorno
 
@@ -160,6 +162,24 @@ Como el dev server de Flask (`app.run()`) **no es apto para producción** (lo di
 **Recordatorios**:
 - El free tier de Render "duerme" el servicio tras 15 minutos sin tráfico (la primera petición después tarda ~1 min en responder mientras despierta) — normal, no es un error.
 - Sin auto-deploy (ver nota de "Public Git Repository" arriba): cada push a `main` que quieran en producción necesita un "Manual Deploy" desde el panel de Render.
+
+## 10. Probar contra otra base (cambiar de proveedor sin arriesgar la actual)
+
+Para evaluar otro proveedor compatible con MySQL sin tocar tu `.env`: crea un segundo archivo en la raíz (ej. `.env.tidb`, con las mismas variables `DB_*`) y elige cuál usar con la variable **`GEDENAZ_ENV_FILE`**:
+
+```bash
+GEDENAZ_ENV_FILE=.env.tidb python scripts/apply_schema.py src/gedenaz/data/schema_cloud.sql
+GEDENAZ_ENV_FILE=.env.tidb pytest
+```
+
+Con esa variable definida **no se lee `.env`**, así que nunca se mezclan credenciales de dos bases. Todo `.env.*` está en `.gitignore` (excepto `.env.example`). En PowerShell: `$env:GEDENAZ_ENV_FILE=".env.tidb"` antes de correr los comandos.
+
+**Qué revisar al evaluar un proveedor nuevo** (lo que un "MySQL compatible" puede hacer distinto):
+1. Correr **`tests/data/test_reglas_de_la_base.py`**: comprueba que la base misma rechace `stock < 0`, `precio <= 0`, `cantidad <= 0`, líneas de venta con producto inexistente y el borrado físico de un producto con ventas, y que la búsqueda no distinga mayúsculas.
+2. Correr la batería completa, sobre todo el test de concurrencia (dos ventas simultáneas de la última unidad).
+3. Comprobar que `SELECT NOW()` respete la hora de Chile (el desfase numérico de `DB_TIMEZONE` debería funcionar en cualquier servidor).
+
+**Resultado con TiDB Cloud Starter (2026-09-20)**: 126/126 tests pasan, con dos ajustes — (a) activar los `CHECK`, que vienen apagados: `SET GLOBAL tidb_enable_check_constraint = ON` (Starter lo permite; es una variable del clúster, hay que repetirlo si se recrea) y (b) la collation explícita en el esquema (ver decisión 10 de [02-modelo-de-datos.md](02-modelo-de-datos.md)). Detalle en [BITACORA.md](../BITACORA.md).
 
 ## Entorno del cliente móvil (Android) — pendiente
 

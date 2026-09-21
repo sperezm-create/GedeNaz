@@ -9,8 +9,10 @@ __pycache__/
 .pytest_cache/
 *.egg-info/
 
-# Configuración local / secretos
+# Configuración local / secretos (.env, .env.tidb, etc. -- menos la plantilla)
 .env
+.env.*
+!.env.example
 secrets/
 *.pem
 

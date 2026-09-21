@@ -2,6 +2,15 @@
 
 Ver docs/specs/05-entorno-desarrollo.md para como generar el archivo .env
 a partir de .env.example.
+
+Por defecto se lee `.env` de la raiz del repo. Para apuntar a OTRA base sin
+tocar ese archivo (ej. probar un proveedor nuevo), definir la variable de
+entorno GEDENAZ_ENV_FILE con el nombre de otro archivo de la raiz:
+
+    GEDENAZ_ENV_FILE=.env.tidb pytest
+
+Con GEDENAZ_ENV_FILE definida NO se lee `.env`, asi que nunca se mezclan
+credenciales de dos bases distintas.
 """
 
 from dataclasses import dataclass
@@ -10,7 +19,8 @@ from pathlib import Path
 from dotenv import load_dotenv
 import os
 
-load_dotenv(Path(__file__).resolve().parents[2] / ".env")
+_RAIZ = Path(__file__).resolve().parents[2]
+load_dotenv(_RAIZ / (os.getenv("GEDENAZ_ENV_FILE") or ".env"))
 
 
 @dataclass(frozen=True)
