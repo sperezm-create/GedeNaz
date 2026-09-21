@@ -16,6 +16,7 @@
 | `activo` | `TINYINT(1)` | `NOT NULL DEFAULT 1` | soporta baja lógica (RF4) — ver decisión abajo |
 | `fecha_creacion` | `DATETIME` | `NOT NULL DEFAULT CURRENT_TIMESTAMP` | auditoría básica |
 | `fecha_actualizacion` | `DATETIME` | `NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP` | auditoría básica |
+| `fecha_ultimo_ingreso` | `DATETIME` | `NOT NULL DEFAULT CURRENT_TIMESTAMP` | fecha del último alta o reposición de stock |
 
 ### DDL propuesto
 
@@ -34,12 +35,20 @@ CREATE TABLE IF NOT EXISTS producto (
     activo               TINYINT(1) NOT NULL DEFAULT 1,
     fecha_creacion       DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     fecha_actualizacion  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    fecha_ultimo_ingreso DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT chk_precio_positivo CHECK (precio > 0),
     CONSTRAINT chk_stock_no_negativo CHECK (stock >= 0)
 );
 
 CREATE INDEX idx_producto_nombre ON producto (nombre);
 CREATE INDEX idx_producto_categoria ON producto (categoria);
+```
+
+Si la tabla ya existía antes de agregar este campo, ejecutar una vez:
+
+```sql
+ALTER TABLE producto
+  ADD COLUMN fecha_ultimo_ingreso DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP;
 ```
 
 Este script vivirá en `src/gedenaz/data/schema.sql` (Fase 1.2 de la Carta Gantt, responsable: Francisco Jara).

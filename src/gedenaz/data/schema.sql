@@ -16,6 +16,7 @@ CREATE TABLE IF NOT EXISTS producto (
     activo               TINYINT(1) NOT NULL DEFAULT 1,
     fecha_creacion       DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     fecha_actualizacion  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    fecha_ultimo_ingreso DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT chk_precio_positivo CHECK (precio > 0),
     CONSTRAINT chk_stock_no_negativo CHECK (stock >= 0)
 );
