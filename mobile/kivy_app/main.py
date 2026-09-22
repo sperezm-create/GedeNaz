@@ -18,7 +18,7 @@ from kivy.uix.label import Label
 from kivy.uix.widget import Widget
 
 #tests simples#
-API_BASE_URL = os.getenv("GEDENAZ_API_URL", "http://127.0.0.1:5000").rstrip("/")
+API_BASE_URL = os.getenv("GEDENAZ_API_URL", "https://gedenaz-api.onrender.com").rstrip("/")
 
 
 class ColorBlock(BoxLayout):

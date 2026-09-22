@@ -12,9 +12,12 @@ __pycache__/
 # Configuración local / secretos (.env, .env.tidb, etc. -- menos la plantilla)
 .env
 .env.*
+env.tidb
 !.env.example
 secrets/
 *.pem
+tidb-ca.pem
+Informe propuesta Proyecto GedeNaz
 
 # Editor / OS
 .vscode/
