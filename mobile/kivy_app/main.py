@@ -136,6 +136,7 @@ class GedeNazApp(App):
             message = f"No se pudo conectar: {exc}"
         Clock.schedule_once(lambda _dt: setattr(self.message_label, "text", message), 0)
 
+
 if __name__ == "__main__":
     GedeNazApp().run()
 
