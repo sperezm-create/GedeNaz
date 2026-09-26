@@ -8,6 +8,7 @@ construyen sobre esta conexion.
 
 from contextlib import contextmanager
 from datetime import datetime
+from pathlib import Path
 from typing import Iterator
 from zoneinfo import ZoneInfo
 
@@ -50,7 +51,12 @@ def get_connection():
         # Sin ssl_verify_cert=True junto a ssl_ca, mysql-connector rechaza
         # la conexion con "Invalid ssl-mode" -- ver nota en config.py y
         # docs/specs/05-entorno-desarrollo.md (pasa con Aiven).
-        connect_kwargs["ssl_ca"] = cfg.ssl_ca
+        ca_path = Path(cfg.ssl_ca)
+        if not ca_path.is_absolute():
+            # Resolve relative to the repository root, not the process cwd:
+            # the mobile client may launch the API from another directory.
+            ca_path = Path(__file__).resolve().parents[3] / ca_path
+        connect_kwargs["ssl_ca"] = str(ca_path)
         connect_kwargs["ssl_verify_cert"] = True
 
     return mysql.connector.connect(**connect_kwargs)

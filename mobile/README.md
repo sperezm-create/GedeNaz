@@ -37,7 +37,11 @@ Ejecuta la ventana:
 python mobile\kivy_app\main.py
 ```
 
-La app usa por defecto la API local:
+La app tiene dos acciones: comprobar la API pública y consultar/editar productos
+en TiDB. Las credenciales de TiDB se quedan en el servidor Flask; la app no
+abre conexiones MySQL directas.
+
+La comprobación de API usa por defecto la API pública:
 
 ```text
 http://127.0.0.1:5000
@@ -49,6 +53,32 @@ Si quieres usar otra URL:
 $env:GEDENAZ_API_URL="https://gedenaz-api.onrender.com"
 python mobile\kivy_app\main.py
 ```
+
+## Conectar la app de prueba a TiDB
+
+El archivo local `env.tidb` configura las credenciales y `secrets/tidb-ca.pem`
+contiene el certificado TLS. Ambos están excluidos de Git. Desde la raíz del
+proyecto, inicia la API de prueba dedicada a TiDB:
+
+```powershell
+python scripts\run_tidb_api.py
+```
+
+Este servidor usa el puerto `5001` para evitar confundirse con otra API local
+que esté corriendo en el puerto `5000`. En otra terminal abre la app:
+
+```powershell
+python mobile\kivy_app\main.py
+```
+
+La app apunta por defecto a `http://127.0.0.1:5001` para leer y editar TiDB.
+En Android Emulator, configura `GEDENAZ_DB_API_URL` como
+`http://10.0.2.2:5001` antes de abrirla. En un teléfono físico, usa la IP local
+del computador con el puerto `5001` y asegúrate de que ambos estén en la misma
+red. El servidor dedicado escucha en todas las interfaces. El botón de API
+continúa comprobando la URL configurada
+en `GEDENAZ_API_URL` (por defecto, la API pública); la pantalla de TiDB consulta
+y edita productos a través del servidor configurado en `GEDENAZ_DB_API_URL`.
 
 ## Probar con Android
 
@@ -92,7 +122,7 @@ Si la API Flask corre en tu PC y la app corre dentro del emulador Android,
 usa:
 
 ```text
-http://10.0.2.2:5000
+http://10.0.2.2:5001
 ```
 
 Para el APK, hay que dejar esa URL configurada antes de compilar o moverla a
