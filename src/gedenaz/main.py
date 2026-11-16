@@ -4,8 +4,10 @@ import tkinter as tk
 from tkinter import messagebox
 
 from gedenaz.auth import is_valid_admin_login
-from gedenaz.data.product_repository import InMemoryProductRepository
+from gedenaz.data.product_repository import ProductRepository
+from gedenaz.data.sales_repository import SalesRepository
 from gedenaz.logic.product_service import ProductService
+from gedenaz.logic.sales_service import SalesService
 from gedenaz.ui.dashboard import DashboardView
 
 
@@ -47,7 +49,8 @@ class LoginView:
 class AppController:
     def __init__(self, root):
         self.root = root
-        self.service = ProductService(InMemoryProductRepository())
+        self.service = ProductService(ProductRepository(), fallback_on_error=False)
+        self.sales_service = SalesService(SalesRepository())
         self.show_login()
 
     def show_login(self):
@@ -58,7 +61,12 @@ class AppController:
     def show_dashboard(self):
         for widget in self.root.winfo_children():
             widget.destroy()
-        DashboardView(self.root, self.service, on_logout=self.show_login)
+        DashboardView(
+            self.root,
+            self.service,
+            on_logout=self.show_login,
+            sales_service=self.sales_service,
+        )
 
 
 def main() -> None:

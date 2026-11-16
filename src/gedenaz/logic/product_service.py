@@ -7,15 +7,20 @@ from gedenaz.logic.validators import validate_product
 
 
 class ProductService:
-    def __init__(self, repository: ProductRepository | InMemoryProductRepository | None = None) -> None:
+    def __init__(
+        self,
+        repository: ProductRepository | InMemoryProductRepository | None = None,
+        fallback_on_error: bool = True,
+    ) -> None:
         self.repository = repository or ProductRepository()
+        self.fallback_on_error = fallback_on_error
         self._memory_repository = InMemoryProductRepository()
 
     def _run_with_fallback(self, operation, *args, **kwargs):
         try:
             return operation(self.repository, *args, **kwargs)
         except Exception:
-            if self.repository is not self._memory_repository:
+            if self.fallback_on_error and self.repository is not self._memory_repository:
                 self.repository = self._memory_repository
                 return operation(self.repository, *args, **kwargs)
             raise

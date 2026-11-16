@@ -27,13 +27,13 @@ Flujo actual: `ingreso de producto → registro escrito → venta/ajuste de stoc
 
 ## Objetivo general
 
-Desarrollar una aplicación de escritorio para GedeNaz, usando Python y MySQL, que permita a sus administradores gestionar de manera eficiente el inventario de joyas mediante creación, consulta, actualización y eliminación de productos.
+Desarrollar una aplicación de escritorio para GedeNaz, usando Python y MySQL, que permita a sus administradores gestionar el inventario, registrar ventas con boletas internas y consultar los productos más vendidos.
 
 ## Objetivos específicos
 
 1. Analizar el proceso actual de registro y control de inventario para identificar falencias y requerimientos funcionales.
-2. Diseñar la arquitectura de la solución (interfaz en Python + modelo de datos en MySQL) que soporte las cuatro operaciones CRUD.
-3. Implementar y validar mediante pruebas funcionales las cuatro operaciones, asegurando el correcto funcionamiento antes de la entrega final.
+2. Diseñar la arquitectura de la solución (interfaz en Python + modelo de datos en MySQL) para inventario, ventas y estadísticas.
+3. Implementar y validar mediante pruebas funcionales la gestión de productos y ventas.
 
 ## Alcance — dentro (ver detalle en [01-requisitos-funcionales.md](01-requisitos-funcionales.md))
 
@@ -42,8 +42,9 @@ Desarrollar una aplicación de escritorio para GedeNaz, usando Python y MySQL, q
 | RF1 | Crear | Registrar nuevos productos (nombre, precio, stock inicial, categoría) |
 | RF2 | Leer | Listar, buscar/filtrar por nombre o categoría, ver detalle |
 | RF3 | Actualizar | Editar datos de un producto y ajustar stock |
-| RF3.1 | Reportes | Reportes analíticos de ventas/productos más rentables — **trabajo futuro, fuera del alcance actual** |
 | RF4 | Eliminar | Dar de baja productos, con confirmación |
+| RF5 | Ventas | Registrar ventas desde el inventario, emitir una boleta interna y descontar stock |
+| RF6 | Estadísticas | Consultar productos más vendidos a partir de las ventas registradas |
 
 ## Alcance — fuera
 
@@ -52,21 +53,22 @@ Desarrollar una aplicación de escritorio para GedeNaz, usando Python y MySQL, q
 - Catálogo público para clientes finales.
 - Gestión de pedidos, despacho o seguimiento de compras.
 - Multiusuario con roles diferenciados (solo existe el rol "administrador").
-- Reportes analíticos (RF3.1) en esta primera versión.
+- Emisión de documentos tributarios electrónicos. La boleta de esta versión es un comprobante interno de la app.
+- Reportes de rentabilidad avanzados; las estadísticas de unidades vendidas de RF6 sí están incluidas.
 
-El alcance se acotó deliberadamente a las 4 operaciones CRUD, considerando el tiempo disponible del semestre y que GedeNaz es administrada por solo dos personas: se prioriza una solución simple, mantenible y realmente utilizable por el negocio.
+El alcance prioriza una solución simple, mantenible y realmente utilizable por el negocio: inventario, registro interno de ventas y estadísticas de unidades vendidas.
 
 ## Consecuencias esperadas del sistema
 
 - Elimina los registros manuales del inventario, reduciendo errores de digitación y descuadres entre lo registrado y el stock real.
 - Gedalias y Nazareth consultan y actualizan el mismo inventario centralizado en MySQL, sin depender de comunicarse para confirmar disponibilidad.
 - Mejora la eficiencia operativa (menos tiempo buscando/verificando en bodega) y la confiabilidad de los datos para decisiones diarias.
-- Deja una base ordenada para incorporar a futuro reportes de ventas o de productos más rentables (RF3.1).
+- Permite identificar los productos con mayor demanda a partir de las ventas registradas; análisis de rentabilidad queda para una etapa futura.
 
 ## Documentos relacionados
 
-- [01-requisitos-funcionales.md](01-requisitos-funcionales.md) — detalle y criterios de aceptación de RF1–RF4.
-- [02-modelo-de-datos.md](02-modelo-de-datos.md) — entidad Producto y esquema MySQL.
+- [01-requisitos-funcionales.md](01-requisitos-funcionales.md) — detalle y criterios de aceptación de RF1–RF6.
+- [02-modelo-de-datos.md](02-modelo-de-datos.md) — productos, ventas y esquema MySQL.
 - [03-arquitectura.md](03-arquitectura.md) — arquitectura de capas, stack tecnológico, estructura del repo.
 - [04-plan-de-trabajo.md](04-plan-de-trabajo.md) — fases, hitos y roles (derivado de la Carta Gantt).
 - [05-entorno-desarrollo.md](05-entorno-desarrollo.md) — cómo levantar el entorno de desarrollo (entorno virtual, dependencias, MySQL).

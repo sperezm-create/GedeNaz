@@ -19,6 +19,8 @@ class InMemoryProductRepository:
 
     def create(self, product: Product) -> int:
         item = dict(product)
+        item.setdefault("material", "Sin especificar")
+        item.setdefault("talla", "Única")
         item["id"] = len(self._items) + 1
         item["activo"] = 1
         item["fecha_creacion"] = datetime.now()
@@ -32,6 +34,9 @@ class InMemoryProductRepository:
                 item.get("activo", 1) == 1
                 and str(item.get("nombre", "")).casefold() == product["nombre"].casefold()
                 and str(item.get("categoria", "")).casefold() == product["categoria"].casefold()
+                and str(item.get("material", "Sin especificar")).casefold()
+                == product["material"].casefold()
+                and str(item.get("talla", "Única")).casefold() == product["talla"].casefold()
             ):
                 item["stock"] += product["stock"]
                 item["fecha_ultimo_ingreso"] = datetime.now()
@@ -65,6 +70,16 @@ class InMemoryProductRepository:
                 return
         raise ValueError("Producto no encontrado.")
 
+    def adjust_stock(self, product_id: int, quantity: int) -> None:
+        for item in self._items:
+            if item.get("id") == product_id:
+                new_stock = item["stock"] + quantity
+                if new_stock < 0:
+                    raise ValueError("El stock no puede quedar negativo.")
+                item["stock"] = new_stock
+                return
+        raise ValueError("Producto no encontrado.")
+
     def deactivate(self, product_id: int) -> None:
         for item in self._items:
             if item.get("id") == product_id:
@@ -82,10 +97,13 @@ class ProductRepository:
             try:
                 cursor.execute(
                     """
-                    INSERT INTO producto (nombre, categoria, precio, stock)
-                    VALUES (%s, %s, %s, %s)
+                    INSERT INTO producto (nombre, categoria, material, talla, precio, stock)
+                    VALUES (%s, %s, %s, %s, %s, %s)
                     """,
-                    (product["nombre"], product["categoria"], product["precio"], product["stock"]),
+                    (
+                        product["nombre"], product["categoria"], product["material"],
+                        product["talla"], product["precio"], product["stock"],
+                    ),
                 )
                 connection.commit()
                 return int(cursor.lastrowid)
@@ -103,9 +121,13 @@ class ProductRepository:
                     SELECT id FROM producto
                     WHERE activo = 1 AND LOWER(nombre) = LOWER(%s)
                       AND LOWER(categoria) = LOWER(%s)
+                      AND LOWER(material) = LOWER(%s) AND LOWER(talla) = LOWER(%s)
                     FOR UPDATE
                     """,
-                    (product["nombre"], product["categoria"]),
+                    (
+                        product["nombre"], product["categoria"],
+                        product["material"], product["talla"],
+                    ),
                 )
                 existing = cursor.fetchone()
                 if existing:
@@ -122,10 +144,13 @@ class ProductRepository:
                     cursor.execute(
                         """
                         INSERT INTO producto
-                            (nombre, categoria, precio, stock, fecha_ultimo_ingreso)
-                        VALUES (%s, %s, %s, %s, CURRENT_TIMESTAMP)
+                            (nombre, categoria, material, talla, precio, stock, fecha_ultimo_ingreso)
+                        VALUES (%s, %s, %s, %s, %s, %s, CURRENT_TIMESTAMP)
                         """,
-                        (product["nombre"], product["categoria"], product["precio"], product["stock"]),
+                        (
+                            product["nombre"], product["categoria"], product["material"],
+                            product["talla"], product["precio"], product["stock"],
+                        ),
                     )
                     product_id = int(cursor.lastrowid)
                 connection.commit()
@@ -141,7 +166,7 @@ class ProductRepository:
             try:
                 cursor.execute(
                     """
-                    SELECT id, nombre, categoria, precio, stock,
+                    SELECT id, nombre, categoria, material, talla, precio, stock,
                               activo, fecha_creacion, fecha_actualizacion,
                               fecha_ultimo_ingreso
                     FROM producto
@@ -164,7 +189,7 @@ class ProductRepository:
             try:
                 cursor.execute(
                     """
-                    SELECT id, nombre, categoria, precio, stock,
+                    SELECT id, nombre, categoria, material, talla, precio, stock,
                               activo, fecha_creacion, fecha_actualizacion,
                               fecha_ultimo_ingreso
                     FROM producto
@@ -185,10 +210,14 @@ class ProductRepository:
                 cursor.execute(
                     """
                     UPDATE producto
-                    SET nombre = %s, categoria = %s, precio = %s, stock = %s
+                    SET nombre = %s, categoria = %s, material = %s, talla = %s,
+                        precio = %s, stock = %s
                     WHERE id = %s AND activo = 1
                     """,
-                    (product["nombre"], product["categoria"], product["precio"], product["stock"], product_id),
+                    (
+                        product["nombre"], product["categoria"], product["material"],
+                        product["talla"], product["precio"], product["stock"], product_id,
+                    ),
                 )
                 connection.commit()
             finally:

@@ -9,11 +9,17 @@ def validate_product(data: dict) -> dict:
 
     nombre = str(data.get("nombre", "")).strip()
     categoria = str(data.get("categoria", "")).strip()
+    material = str(data.get("material", "Sin especificar")).strip()
+    talla = str(data.get("talla", "Única")).strip()
 
     if not nombre:
         raise ValueError("El nombre del producto es obligatorio.")
     if not categoria:
         raise ValueError("La categoría es obligatoria.")
+    if not material:
+        raise ValueError("El material es obligatorio.")
+    if not talla:
+        raise ValueError("La talla es obligatoria.")
 
     try:
         precio = Decimal(str(data.get("precio", "0")))
@@ -33,6 +39,8 @@ def validate_product(data: dict) -> dict:
     return {
         "nombre": nombre,
         "categoria": categoria.lower(),
+        "material": material,
+        "talla": talla,
         "precio": precio,
         "stock": stock,
     }

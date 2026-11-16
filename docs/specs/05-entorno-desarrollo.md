@@ -45,7 +45,7 @@ Dependencias del proyecto ([03-arquitectura.md](03-arquitectura.md)):
 |---|---|
 | `mysql-connector-python` | Conector oficial Python↔MySQL (capa `data/`) |
 | `python-dotenv` | Carga de variables de entorno desde `.env` |
-| `pytest` | Pruebas funcionales (RF1–RF4) |
+| `pytest` | Pruebas funcionales (inventario y ventas, RF1–RF6) |
 
 ## 4. Configurar variables de entorno
 

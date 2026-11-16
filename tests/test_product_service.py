@@ -31,12 +31,26 @@ def test_create_validates_and_normalizes_product():
     service = ProductService(repository)
 
     product_id = service.create(
-        {"nombre": "  Anillo  ", "categoria": "  anillo", "precio": "12500", "stock": "3"}
+        {
+            "nombre": "  Anillo  ",
+            "categoria": "  anillo",
+            "material": " Plata ",
+            "talla": " 7 ",
+            "precio": "12500",
+            "stock": "3",
+        }
     )
 
     assert product_id == 7
     assert repository.created == [
-        {"nombre": "Anillo", "categoria": "anillo", "precio": Decimal("12500"), "stock": 3}
+        {
+            "nombre": "Anillo",
+            "categoria": "anillo",
+            "material": "Plata",
+            "talla": "7",
+            "precio": Decimal("12500"),
+            "stock": 3,
+        }
     ]
 
 
@@ -55,6 +69,36 @@ def test_create_adds_stock_to_existing_product():
     assert len(products) == 1
     assert products[0]["stock"] == 5
     assert products[0]["fecha_ultimo_ingreso"] is not None
+
+
+def test_products_with_different_material_or_size_are_not_merged():
+    from gedenaz.data.product_repository import InMemoryProductRepository
+
+    service = ProductService(InMemoryProductRepository())
+    service.create(
+        {
+            "nombre": "Anillo",
+            "categoria": "Anillo",
+            "material": "Plata",
+            "talla": "7",
+            "precio": "12500",
+            "stock": "3",
+        }
+    )
+    service.create(
+        {
+            "nombre": "Anillo",
+            "categoria": "Anillo",
+            "material": "Oro",
+            "talla": "7",
+            "precio": "15000",
+            "stock": "2",
+        }
+    )
+
+    products = service.list()
+    assert len(products) == 2
+    assert {(item["material"], item["talla"]) for item in products} == {("Plata", "7"), ("Oro", "7")}
 
 
 def test_service_falls_back_to_memory_repository_when_db_fails():
@@ -80,6 +124,8 @@ def test_inventory_label_and_details_uses_product_name_only():
     detail_text = build_product_details(product)
     assert "Collar" in detail_text
     assert "Stock: 8" in detail_text
+    assert "Material: Sin especificar" in detail_text
+    assert "Talla: Única" in detail_text
 
 
 def test_dashboard_exposes_edit_and_delete_actions():
@@ -132,7 +178,15 @@ def test_dashboard_edit_window_has_save_and_cancel_buttons():
 
 @pytest.mark.parametrize(
     ("field", "value"),
-    [("nombre", ""), ("categoria", ""), ("precio", "0"), ("stock", "-1"), ("stock", "1.5")],
+    [
+        ("nombre", ""),
+        ("categoria", ""),
+        ("material", ""),
+        ("talla", ""),
+        ("precio", "0"),
+        ("stock", "-1"),
+        ("stock", "1.5"),
+    ],
 )
 def test_create_rejects_invalid_product(field, value):
     repository = FakeRepository()

@@ -1,6 +1,6 @@
 # 01 · Requisitos Funcionales — GedeNaz App
 
-> Ver [00-vision-y-alcance.md](00-vision-y-alcance.md) para el contexto general. Los campos exactos de "Producto" listados aquí son una propuesta inicial basada en el informe (sección 6.2: nombre, precio, cantidad disponible, categoría); **deben validarse con Gedalias y Nazareth** antes o durante la implementación de RF1 (así lo marca el propio análisis de riesgos del informe). Cuando se confirmen o cambien, actualizar este documento primero.
+> Ver [00-vision-y-alcance.md](00-vision-y-alcance.md) para el contexto general. Este documento incluye los campos de producto y venta acordados para esta implementación.
 
 Usuario único del sistema: **administrador** (Gedalias / Nazareth), sin diferenciación de roles ni permisos.
 
@@ -16,6 +16,8 @@ Usuario único del sistema: **administrador** (Gedalias / Nazareth), sin diferen
 |---|---|---|---|
 | Nombre | texto | sí | no vacío |
 | Categoría | texto o lista (anillo, collar, pulsera, aro, otro) | sí | no vacío |
+| Material | texto | sí | no vacío |
+| Talla | texto | sí | no vacío; admite tallas numéricas, medidas y "Única" |
 | Precio | numérico (decimal, CLP) | sí | > 0 |
 | Stock inicial | entero | sí | ≥ 0 |
 
@@ -24,6 +26,7 @@ Usuario único del sistema: **administrador** (Gedalias / Nazareth), sin diferen
 - No se permite guardar el formulario si falta un campo obligatorio o el tipo de dato es inválido (ver Fase 1.6 de la Carta Gantt: "Validaciones del formulario — campos obligatorios y tipos de dato").
 - Precio debe ser numérico positivo; stock inicial debe ser un entero ≥ 0.
 - Al guardar exitosamente, el producto queda disponible inmediatamente en RF2 (listado/consulta).
+- La combinación de nombre, categoría, material y talla identifica una variante al reponer stock; las variantes de talla o material distintos no se fusionan.
 - El usuario recibe confirmación visual de que el producto fue creado (o del error, si aplica).
 
 ---
@@ -34,7 +37,7 @@ Usuario único del sistema: **administrador** (Gedalias / Nazareth), sin diferen
 
 **Funciones**
 
-- Listado completo de productos (nombre, categoría, precio, stock).
+- Listado completo de productos (nombre, categoría, material, talla, precio, stock).
 - Búsqueda/filtro por **nombre** y por **categoría**.
 - Vista de detalle de un producto individual.
 
@@ -52,7 +55,7 @@ Usuario único del sistema: **administrador** (Gedalias / Nazareth), sin diferen
 
 **Funciones**
 
-- Editar nombre, categoría, precio y/o stock de un producto existente.
+- Editar nombre, categoría, material, talla, precio y/o stock de un producto existente.
 - Ajuste de stock (incremento/decremento) como parte de la edición.
 
 **Criterios de aceptación**
@@ -60,10 +63,6 @@ Usuario único del sistema: **administrador** (Gedalias / Nazareth), sin diferen
 - El stock resultante nunca puede quedar en negativo (ver Fase 3.2 de la Carta Gantt: "Validaciones de actualización — stock no negativo, campos"); si una edición lo produciría, se rechaza con mensaje claro.
 - Los mismos campos obligatorios y tipos de dato de RF1 aplican al editar.
 - Tras guardar, los cambios son visibles de inmediato en RF2.
-
-### RF3.1 — Reportes analíticos (fuera de alcance actual)
-
-Generación de reportes de ventas o productos más rentables. Queda como **trabajo futuro**; no se implementa en esta versión (ver [00-vision-y-alcance.md](00-vision-y-alcance.md)). Se documenta aquí solo para trazabilidad con el informe y la Carta Gantt.
 
 ---
 
@@ -76,6 +75,48 @@ Generación de reportes de ventas o productos más rentables. Queda como **traba
 - La eliminación requiere una **confirmación explícita** del usuario antes de ejecutarse (diálogo de confirmación) — no debe haber borrado accidental de un solo clic.
 - Tras confirmar, el producto deja de aparecer en el listado (RF2).
 - Decisión a validar con el equipo: borrado físico (`DELETE`) vs. baja lógica (columna `activo`/`eliminado`). Ver nota en [02-modelo-de-datos.md](02-modelo-de-datos.md).
+
+## RF5 — Registrar ventas y emitir boleta interna
+
+**Como** administrador, **quiero** seleccionar productos del inventario por su código, indicar cantidades y confirmar la venta **para** emitir un comprobante y mantener el stock actualizado.
+
+**Criterios de aceptación**
+
+- Cada producto se identifica en la app con un código estable derivado de su ID (`GN-000001`).
+- Solo se puede vender un producto activo con stock suficiente; las cantidades deben ser enteros positivos.
+- La confirmación registra la venta y sus líneas con precio/nombre de venta, número de boleta interno y fecha; descuenta el stock en la misma operación.
+- En cada línea se registra si el producto fue comprado para un hombre o una mujer. Cada línea conserva como historial el material y talla vigentes al momento de la venta.
+- La fecha y hora de cada venta se registran juntas con precisión de segundos.
+- Si el registro falla o falta stock, no se registra una venta parcial ni se descuenta parcialmente el stock.
+- La boleta interna se muestra al confirmar la venta. No reemplaza una boleta tributaria ni procesa pagos.
+- Al confirmar, se puede registrar como pago completo o crear un plan de cuotas sin interés, con frecuencia configurable (semanal, quincenal o mensual), entre 2 y 120 cuotas y fecha del primer vencimiento.
+- El total se divide entre las cuotas y cualquier diferencia de redondeo se asigna a la última cuota. Cada cuota puede recibir varios abonos parciales; se conserva fecha y monto de cada abono.
+- En el historial y la gestión de pagos se muestran el monto pagado, el saldo pendiente, el estado de cada cuota y su próximo vencimiento. No se permite abonar más que el saldo de la cuota.
+- Una venta que ya tenga abonos registrados no se puede anular hasta resolver esos pagos fuera del sistema; el sistema debe informar claramente ese límite y no alterar el stock ni el historial financiero.
+- El administrador puede anular una boleta completa con confirmación; la operación devuelve todas sus unidades al stock, conserva la boleta marcada como anulada y excluye sus líneas de estadísticas. Una boleta no se puede anular dos veces.
+
+## RF6 — Consultar productos más vendidos
+
+**Como** administrador, **quiero** ver las unidades vendidas por producto **para** identificar cuáles tienen mayor demanda.
+
+**Criterios de aceptación**
+
+- La estadística se calcula desde ventas vigentes, muestra unidades vendidas y se ordena de mayor a menor; las boletas anuladas no cuentan.
+- Muestra unidades vendidas por categoría y su porcentaje sobre todas las unidades vendidas vigentes.
+- Muestra los precios unitarios agrupados y ordenados de mayor a menor cantidad de unidades vendidas para identificar el precio más frecuente.
+- El historial y las estadísticas se actualizan después de confirmar una venta.
+
+## RF7 — Consultar calendario e historial de ventas
+
+**Como** administrador, **quiero** consultar las ventas en un calendario por año, mes, día y hora **para** encontrar rápidamente una venta y revisar lo vendido.
+
+**Criterios de aceptación**
+
+- El calendario permite filtrar por año y mes, elegir un día y filtrar sus ventas por hora.
+- Los días con ventas vigentes muestran su cantidad; el detalle del día muestra hora, boleta, total y cantidad de unidades. Las ventas anuladas no aparecen en el calendario.
+- Al abrir una venta se presenta la fecha/hora completa y cada producto con material, talla y destinatario.
+- Las ventas anuladas permanecen consultables y claramente identificadas en el historial, pero no aparecen en el calendario ni se suman a las estadísticas.
+- El selector de año incluye el año actual y los años con ventas vigentes; al cambiar de año, el calendario continúa usando las fechas y días correctos.
 
 ---
 

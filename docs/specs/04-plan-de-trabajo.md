@@ -50,7 +50,7 @@ Decisiones relevantes (alcance, diseño, prioridades) se toman en conjunto por c
 | 2.6 | Pruebas de RF2 (Leer/consultar productos) | Todo el equipo | 2026-10-15 | 2026-10-18 |
 | 2.7 | Redactar y revisar Informe Avance #2 | Nicolas Silva | 2026-10-17 | 2026-10-20 |
 
-## Fase 3 · Avance #3 (RF3 · RF3.1 · RF4) — 2026-10-22 a 2026-11-10
+## Fase 3 · Avance #3 (RF3 · RF4) — 2026-10-22 a 2026-11-10
 
 | ID | Tarea | Responsable | Inicio | Fin |
 |---|---|---|---|---|
@@ -60,7 +60,7 @@ Decisiones relevantes (alcance, diseño, prioridades) se toman en conjunto por c
 | 3.4 | Implementar lógica de borrado (DELETE) en MySQL | Francisco Jara | 2026-10-30 | 2026-11-03 |
 | 3.5 | Pruebas integrales de las 4 operaciones CRUD (RF1–RF4) | Todo el equipo | 2026-11-03 | 2026-11-07 |
 | 3.6 | Corrección de errores y pulido de la interfaz | Sebastian Perez | 2026-11-05 | 2026-11-09 |
-| 3.7 | Generación de reportes analíticos (RF3.1) — trabajo futuro | Nicolas Silva | 2026-11-08 | 2026-11-10 |
+| 3.7 | Análisis de rentabilidad — trabajo futuro | Nicolas Silva | 2026-11-08 | 2026-11-10 |
 | 3.7b | Redactar y revisar Informe Avance #3 | Nicolas Silva | 2026-11-08 | 2026-11-10 |
 
 ## Fase 4 · Cierre — 2026-11-12 a 2026-12-02
