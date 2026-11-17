@@ -40,9 +40,10 @@ Detalle completo en [05-entorno-desarrollo.md](docs/specs/05-entorno-desarrollo.
 La app de escritorio permanece en `src/gedenaz/ui/`. El cliente Kivy de Android está en `mobile/` y se conecta únicamente a la API; las credenciales de MySQL permanecen en el servidor.
 
 1. En `.env`, configura `API_ADMIN_USERNAME` y `API_ADMIN_PASSWORD` con credenciales propias.
-2. Inicia la API desde la raíz del proyecto: `python -m gedenaz.api` con `PYTHONPATH=src` configurado.
-3. En Android, ingresa la URL de la API. Para producción, publica la API detrás de HTTPS y no expongas MySQL a internet.
-4. Para generar un APK de prueba, usa Linux o WSL2, instala Buildozer allí y, desde `mobile/`, ejecuta `buildozer android debug`.
+2. En TiDB Cloud Starter/Essential, descarga el certificado CA desde **Connect** y configura `DB_HOST`, `DB_PORT=4000`, `DB_USER`, `DB_PASSWORD`, `DB_NAME` y `DB_SSL_CA` en el entorno donde se ejecute la API.
+3. Inicia la API desde la raíz del proyecto: `python -m gedenaz.api` con `PYTHONPATH=src` configurado.
+4. En Android, ingresa la URL de la API. Para producción, publica la API detrás de HTTPS y no expongas MySQL a internet.
+5. Para generar un APK de prueba, usa Linux o WSL2, instala Buildozer allí y, desde `mobile/`, ejecuta `buildozer android debug`.
 
 El cliente móvil de este avance incluye inicio de sesión e inventario de consulta. Los endpoints del servidor ya contemplan ventas, cuotas y estadísticas; sus pantallas móviles aún requieren migración. La guía de desarrollo está en [docs/specs/05-entorno-desarrollo.md](docs/specs/05-entorno-desarrollo.md).
 

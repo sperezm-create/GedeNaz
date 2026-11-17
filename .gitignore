@@ -11,6 +11,7 @@ __pycache__/
 .buildozer/
 mobile/.buildozer/
 mobile/bin/
+tidb-ca.pem
 
 # Configuración local / secretos
 .env

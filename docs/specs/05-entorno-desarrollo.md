@@ -83,6 +83,19 @@ python -m gedenaz.api
 
 La API escucha en el puerto `8000`. Puedes revisar su documentación OpenAPI en `/docs`. En un servidor remoto, configura HTTPS antes de permitir conexiones con credenciales y restringe el acceso a MySQL para que solo lo use el servidor de la API.
 
+Para TiDB Cloud Starter/Essential, descarga el certificado CA desde **Connect** y configúralo en el `.env` del servidor API:
+
+```dotenv
+DB_HOST=el-host-indicado-por-TiDB
+DB_PORT=4000
+DB_USER=el-usuario-indicado-por-TiDB
+DB_PASSWORD=la-clave-generada-en-TiDB
+DB_NAME=gedenaz
+DB_SSL_CA=C:/ruta/local/tidb-ca.pem
+```
+
+La conexión MySQL activa verificación TLS del certificado y del nombre del servidor cuando `DB_SSL_CA` está configurado. No guardes el certificado local ni credenciales en Git; conserva la clave en un gestor seguro y configura estas variables en el servicio donde despliegues la API.
+
 ## APK de prueba con Kivy
 
 El proyecto Android está en `mobile/`. Buildozer requiere Linux; en Windows puede usarse WSL2 con una distribución Linux y las dependencias Android indicadas por la guía de instalación de Buildozer.
