@@ -1,6 +1,6 @@
 # GedeNaz App
 
-Aplicación de escritorio (Python + MySQL) para la gestión de inventario de joyas de la empresa GedeNaz. Proyecto del curso Taller de Sistemas de Información (INFB8082), Grupo N°6.
+Aplicación de escritorio (Python + MySQL) y cliente Android en desarrollo (Kivy + API FastAPI) para la gestión de inventario de joyas de la empresa GedeNaz. Proyecto del curso Taller de Sistemas de Información (INFB8082), Grupo N°6.
 
 Incluye registro de ventas desde el inventario, boletas internas, descuento de stock, planes de cuotas sin interés con abonos parciales, calendario con historial por fecha y hora e indicadores de productos más vendidos. Los productos registran material y talla; cada línea de venta conserva si fue para hombre o mujer.
 
@@ -34,6 +34,18 @@ $env:PYTHONPATH = "src"; python -m gedenaz.main
 ```
 
 Detalle completo en [05-entorno-desarrollo.md](docs/specs/05-entorno-desarrollo.md).
+
+## Cliente Android (en desarrollo)
+
+La app de escritorio permanece en `src/gedenaz/ui/`. El cliente Kivy de Android está en `mobile/` y se conecta únicamente a la API; las credenciales de MySQL permanecen en el servidor.
+
+1. En `.env`, configura `API_ADMIN_USERNAME` y `API_ADMIN_PASSWORD` con credenciales propias.
+2. Inicia la API desde la raíz del proyecto: `python -m gedenaz.api` con `PYTHONPATH=src` configurado.
+3. En Android, ingresa la URL de la API. Para producción, publica la API detrás de HTTPS y no expongas MySQL a internet.
+4. Para generar un APK de prueba, usa Linux o WSL2, instala Buildozer allí y, desde `mobile/`, ejecuta `buildozer android debug`.
+
+El cliente móvil de este avance incluye inicio de sesión e inventario de consulta. Los endpoints del servidor ya contemplan ventas, cuotas y estadísticas; sus pantallas móviles aún requieren migración. La guía de desarrollo está en [docs/specs/05-entorno-desarrollo.md](docs/specs/05-entorno-desarrollo.md).
+
 Para habilitar ventas en una base existente, seleccionar la base `gedenaz` en MySQL Workbench y ejecutar las sentencias `CREATE TABLE venta` y `CREATE TABLE detalle_venta` de `src/gedenaz/data/schema.sql` (sin repetir las sentencias `CREATE INDEX` del inventario). La boleta generada es un comprobante interno, no un documento tributario electrónico.
 
 Si `venta` ya estaba creada, agrega la columna que permite anular boletas conservando su historial:

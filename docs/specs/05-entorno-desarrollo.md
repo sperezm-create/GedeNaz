@@ -45,6 +45,9 @@ Dependencias del proyecto ([03-arquitectura.md](03-arquitectura.md)):
 |---|---|
 | `mysql-connector-python` | Conector oficial Python↔MySQL (capa `data/`) |
 | `python-dotenv` | Carga de variables de entorno desde `.env` |
+| `fastapi` y `uvicorn` | API HTTP y servidor para el cliente Android |
+| `httpx` | Cliente de pruebas para la API |
+| `requests` | Cliente HTTP del cliente móvil |
 | `pytest` | Pruebas funcionales (inventario y ventas, RF1–RF6) |
 
 ## 4. Configurar variables de entorno
@@ -54,6 +57,7 @@ cp .env.example .env      # Windows: copy .env.example .env
 ```
 
 Completar `.env` con las credenciales locales de MySQL (host, usuario, contraseña, nombre de base de datos). **Nunca** commitear `.env` (ya está en `.gitignore`).
+Para iniciar la API, añadir también `API_ADMIN_USERNAME` y `API_ADMIN_PASSWORD` con credenciales propias; la API no acepta credenciales predeterminadas.
 
 ## 5. Configurar VS Code
 
@@ -67,6 +71,29 @@ Completar `.env` con las credenciales locales de MySQL (host, usuario, contrase�
 python -c "import mysql.connector, dotenv, pytest; print('entorno OK')"
 pytest --version
 ```
+
+## API para el cliente Android
+
+Desde Windows PowerShell, en la raíz del repositorio:
+
+```powershell
+$env:PYTHONPATH = "src"
+python -m gedenaz.api
+```
+
+La API escucha en el puerto `8000`. Puedes revisar su documentación OpenAPI en `/docs`. En un servidor remoto, configura HTTPS antes de permitir conexiones con credenciales y restringe el acceso a MySQL para que solo lo use el servidor de la API.
+
+## APK de prueba con Kivy
+
+El proyecto Android está en `mobile/`. Buildozer requiere Linux; en Windows puede usarse WSL2 con una distribución Linux y las dependencias Android indicadas por la guía de instalación de Buildozer.
+
+En WSL2, instala Buildozer en un entorno virtual Linux y, desde el directorio `mobile/`, ejecuta:
+
+```bash
+buildozer android debug
+```
+
+El APK de depuración se genera en `mobile/bin/`. Instálalo en la tablet con Android Debug Bridge (`adb install`) y conecta el cliente a una URL alcanzable de la API. No uses HTTP sin cifrar fuera de una red de desarrollo controlada.
 
 ## Convenciones del repositorio
 

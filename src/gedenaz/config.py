@@ -30,3 +30,13 @@ def get_db_config() -> DBConfig:
         password=os.getenv("DB_PASSWORD", ""),
         database=os.getenv("DB_NAME", "gedenaz"),
     )
+
+
+def get_api_credentials() -> tuple[str, str]:
+    username = os.getenv("API_ADMIN_USERNAME", "").strip()
+    password = os.getenv("API_ADMIN_PASSWORD", "")
+    if not username or not password:
+        raise RuntimeError(
+            "Configura API_ADMIN_USERNAME y API_ADMIN_PASSWORD antes de iniciar la API."
+        )
+    return username, password
