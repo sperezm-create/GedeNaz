@@ -360,13 +360,25 @@ class DashboardView:
         container.pack(fill="both", expand=True)
 
         stats_notebook = ttk.Notebook(container)
+        monthly_frame = ttk.LabelFrame(container, text="Resumen del mes", padding=8)
+        monthly_frame.pack(fill="x", pady=(0, 10))
+        self.monthly_summary_var = tk.StringVar()
+        ttk.Label(
+            monthly_frame,
+            textvariable=self.monthly_summary_var,
+            font=("Segoe UI", 11, "bold"),
+        ).pack(anchor="w")
         stats_notebook.pack(fill="both", expand=True)
         products_frame = ttk.Frame(stats_notebook, padding=8)
         categories_frame = ttk.Frame(stats_notebook, padding=8)
         prices_frame = ttk.Frame(stats_notebook, padding=8)
+        sizes_frame = ttk.Frame(stats_notebook, padding=8)
+        monthly_history_frame = ttk.Frame(stats_notebook, padding=8)
         stats_notebook.add(products_frame, text="Productos")
         stats_notebook.add(categories_frame, text="Categorías")
         stats_notebook.add(prices_frame, text="Precios más vendidos")
+        stats_notebook.add(sizes_frame, text="Tallas por género")
+        stats_notebook.add(monthly_history_frame, text="Ventas por mes")
 
         ttk.Label(
             products_frame,
@@ -418,6 +430,58 @@ class DashboardView:
         self.price_stats_tree.column("precio", width=220, anchor="e")
         self.price_stats_tree.column("unidades", width=180, anchor="e")
         self.price_stats_tree.pack(fill="both", expand=True)
+
+        ttk.Label(
+            sizes_frame,
+            text="Unidades vendidas por talla para cada producto (solo ventas vigentes)",
+            font=("Segoe UI", 12, "bold"),
+        ).pack(anchor="w", pady=(0, 8))
+        size_tables = ttk.Frame(sizes_frame)
+        size_tables.pack(fill="both", expand=True)
+        women_sizes_frame = ttk.LabelFrame(size_tables, text="Mujer", padding=8)
+        women_sizes_frame.pack(side="left", fill="both", expand=True, padx=(0, 4))
+        men_sizes_frame = ttk.LabelFrame(size_tables, text="Hombre", padding=8)
+        men_sizes_frame.pack(side="left", fill="both", expand=True, padx=(4, 0))
+
+        def create_size_tree(parent):
+            tree = ttk.Treeview(
+                parent,
+                columns=("producto", "talla", "unidades"),
+                show="headings",
+            )
+            for column, title, width in (
+                ("producto", "Producto", 230),
+                ("talla", "Talla", 90),
+                ("unidades", "Unidades", 90),
+            ):
+                tree.heading(column, text=title)
+                tree.column(column, width=width, anchor="e" if column == "unidades" else "w")
+            tree.pack(fill="both", expand=True)
+            return tree
+
+        self.women_size_stats_tree = create_size_tree(women_sizes_frame)
+        self.men_size_stats_tree = create_size_tree(men_sizes_frame)
+
+        ttk.Label(
+            monthly_history_frame,
+            text="Ventas e ingresos acumulados por mes (boletas anuladas excluidas)",
+            font=("Segoe UI", 12, "bold"),
+        ).pack(anchor="w", pady=(0, 8))
+        self.monthly_history_tree = ttk.Treeview(
+            monthly_history_frame,
+            columns=("periodo", "ventas", "ingresos"),
+            show="headings",
+        )
+        for column, title, width in (
+            ("periodo", "Mes", 220),
+            ("ventas", "Cantidad de ventas", 200),
+            ("ingresos", "Ingresos generados", 220),
+        ):
+            self.monthly_history_tree.heading(column, text=title)
+            self.monthly_history_tree.column(
+                column, width=width, anchor="e" if column != "periodo" else "w"
+            )
+        self.monthly_history_tree.pack(fill="both", expand=True)
 
         ttk.Button(
             container, text="Actualizar estadísticas", command=self.refresh_sales_data
@@ -910,6 +974,17 @@ class DashboardView:
         stats = self.sales_service.product_stats()
         category_stats = self.sales_service.category_stats()
         price_stats = self.sales_service.price_stats()
+        size_stats = self.sales_service.size_stats()
+        monthly_history = self.sales_service.monthly_history_stats()
+        now = datetime.now()
+        monthly_stats = self.sales_service.monthly_stats(now.year, now.month)
+        month_name = MONTHS[now.month - 1].split(" - ", 1)[1]
+        if hasattr(self, "monthly_summary_var"):
+            self.monthly_summary_var.set(
+                f"{month_name} {now.year} | Ventas: "
+                f"{monthly_stats['cantidad_ventas']} | Ingresos: "
+                f"{format_clp(monthly_stats['ingresos'])}"
+            )
 
         self.sales_history_map = {}
         if hasattr(self, "sales_list_box"):
@@ -970,6 +1045,46 @@ class DashboardView:
                     "",
                     tk.END,
                     values=(format_clp(item["precio_unitario"]), item["unidades_vendidas"]),
+                )
+
+        for recipient, tree_attribute in (
+            ("Mujer", "women_size_stats_tree"),
+            ("Hombre", "men_size_stats_tree"),
+        ):
+            if hasattr(self, tree_attribute):
+                tree = getattr(self, tree_attribute)
+                for row in tree.get_children():
+                    tree.delete(row)
+                for item in size_stats:
+                    if item["genero_destino"] != recipient:
+                        continue
+                    product_label = (
+                        f"{item['nombre_producto']} "
+                        f"({item['categoria_producto']}, {item['material_producto']})"
+                    )
+                    tree.insert(
+                        "",
+                        tk.END,
+                        values=(
+                            product_label,
+                            item["talla_producto"],
+                            item["unidades_vendidas"],
+                        ),
+                    )
+
+        if hasattr(self, "monthly_history_tree"):
+            for row in self.monthly_history_tree.get_children():
+                self.monthly_history_tree.delete(row)
+            for item in monthly_history:
+                month_name = MONTHS[item["mes"] - 1].split(" - ", 1)[1]
+                self.monthly_history_tree.insert(
+                    "",
+                    tk.END,
+                    values=(
+                        f"{month_name} {item['anio']}",
+                        item["cantidad_ventas"],
+                        format_clp(item["ingresos"]),
+                    ),
                 )
 
         if hasattr(self, "calendar_sales_tree"):

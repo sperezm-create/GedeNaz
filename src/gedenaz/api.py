@@ -193,6 +193,25 @@ def create_app(
     def price_stats(username: AuthenticatedUser) -> list[dict[str, Any]]:
         return sales.price_stats()
 
+    @application.get("/stats/sizes")
+    def size_stats(username: AuthenticatedUser) -> list[dict[str, Any]]:
+        return sales.size_stats()
+
+    @application.get("/stats/monthly")
+    def monthly_stats(
+        username: AuthenticatedUser,
+        year: int = Query(ge=1, le=9998),
+        month: int = Query(ge=1, le=12),
+    ) -> dict[str, Any]:
+        try:
+            return sales.monthly_stats(year, month)
+        except ValueError as error:
+            raise _bad_request(error) from error
+
+    @application.get("/stats/monthly/history")
+    def monthly_history_stats(username: AuthenticatedUser) -> list[dict[str, Any]]:
+        return sales.monthly_history_stats()
+
     return application
 
 

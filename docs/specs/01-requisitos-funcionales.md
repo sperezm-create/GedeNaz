@@ -104,7 +104,20 @@ Usuario único del sistema: **administrador** (Gedalias / Nazareth), sin diferen
 - La estadística se calcula desde ventas vigentes, muestra unidades vendidas y se ordena de mayor a menor; las boletas anuladas no cuentan.
 - Muestra unidades vendidas por categoría y su porcentaje sobre todas las unidades vendidas vigentes.
 - Muestra los precios unitarios agrupados y ordenados de mayor a menor cantidad de unidades vendidas para identificar el precio más frecuente.
+- Para cada producto, muestra las unidades vendidas por talla y destinatario (Hombre o Mujer), ordenadas por producto y cantidad; las boletas anuladas y destinatarios no especificados no cuentan.
 - El historial y las estadísticas se actualizan después de confirmar una venta.
+
+## RF8 — Consultar resumen mensual de ventas
+
+**Como** administrador, **quiero** conocer cuántas ventas vigentes se realizaron y cuánto ingreso generaron en un mes **para** revisar el desempeño mensual del negocio.
+
+**Criterios de aceptación**
+
+- La pestaña de estadísticas muestra el número de ventas y la suma de sus totales para el mes y año actuales.
+- Incluye una sección de historial mensual con cantidad de ventas e ingresos para cada mes/año que tenga ventas vigentes, ordenada desde el período más reciente al más antiguo.
+- El resumen se actualiza al refrescar las estadísticas o registrar/anular una venta.
+- Las ventas anuladas no cuentan ni suman ingresos.
+- La API permite consultar el resumen para un año y mes específicos y el historial de todos los meses con ventas.
 
 ## RF7 — Consultar calendario e historial de ventas
 

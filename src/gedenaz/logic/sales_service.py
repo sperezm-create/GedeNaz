@@ -114,3 +114,16 @@ class SalesService:
 
     def price_stats(self) -> list[dict[str, Any]]:
         return self.repository.price_stats()
+
+    def size_stats(self) -> list[dict[str, Any]]:
+        return self.repository.size_stats()
+
+    def monthly_stats(self, year: int, month: int) -> dict[str, Any]:
+        if isinstance(year, bool) or not isinstance(year, int) or not 1 <= year <= 9998:
+            raise ValueError("El año debe ser un número entre 1 y 9998.")
+        if isinstance(month, bool) or not isinstance(month, int) or not 1 <= month <= 12:
+            raise ValueError("El mes debe ser un número entre 1 y 12.")
+        return self.repository.monthly_stats(year, month)
+
+    def monthly_history_stats(self) -> list[dict[str, Any]]:
+        return self.repository.monthly_history_stats()

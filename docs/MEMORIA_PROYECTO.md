@@ -8,7 +8,7 @@
 
 ## En una frase
 
-GedeNaz App es una app de escritorio en Python + MySQL para que Gedalias y Nazareth gestionen inventario, registren ventas con boletas internas y consulten los productos más vendidos.
+GedeNaz App es una app de escritorio en Python + MySQL para que Gedalias y Nazareth gestionen inventario, registren ventas con boletas internas y consulten productos y tallas más vendidos por destinatario, además del resumen mensual de ventas e ingresos.
 
 ## El equipo (curso Taller Sistemas de Información, Grupo 6)
 
@@ -43,7 +43,7 @@ Detalle completo con criterios de aceptación: [`specs/01-requisitos-funcionales
 - ✅ Specs escritas en `docs/specs/` (visión, requisitos, modelo de datos, arquitectura, plan de trabajo, entorno).
 - ✅ Repo Git local inicializado, con commit inicial + merge con el repo remoto del equipo.
 - ✅ Entorno de desarrollo montado con Python, `mysql-connector-python`, `python-dotenv` y `pytest`.
-- ✅ Implementadas las pantallas de inventario y ventas, registro de boletas internas, descuento de stock y estadísticas.
+- ✅ Implementadas las pantallas de inventario y ventas, registro de boletas internas, descuento de stock y estadísticas de productos, tallas por destinatario y resultados mensuales.
 - ✅ Pruebas automatizadas: 21 pasan; una prueba de interfaz se omite cuando Tkinter no está disponible en el entorno de pruebas.
 - ✅ Acceso a GitHub resuelto: Sebastián agregó a `goost01` como colaborador. Push hecho — todo lo anterior ya está en `https://github.com/sperezm-create/GedeNaz.git` (rama `main`), visible para el equipo.
 La app requiere configurar MySQL en `.env` y ejecutar `src/gedenaz/data/schema.sql`; en bases existentes se deben crear las tablas nuevas de venta como se indica en el README.

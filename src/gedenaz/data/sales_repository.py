@@ -334,6 +334,86 @@ class InMemorySalesRepository:
             for price, units in sorted(totals.items(), key=lambda entry: (-entry[1], entry[0]))
         ]
 
+    def size_stats(self) -> list[dict[str, Any]]:
+        totals: dict[tuple[Any, ...], dict[str, Any]] = {}
+        for sale in self._sales:
+            if sale["anulada"]:
+                continue
+            for item in sale["items"]:
+                recipient = item["genero_destino"]
+                if recipient not in ("Hombre", "Mujer"):
+                    continue
+                key = (
+                    item["nombre_producto"],
+                    item["categoria_producto"],
+                    item["material_producto"],
+                    item["talla_producto"],
+                    recipient,
+                )
+                stats = totals.setdefault(
+                    key,
+                    {
+                        "nombre_producto": item["nombre_producto"],
+                        "categoria_producto": item["categoria_producto"],
+                        "material_producto": item["material_producto"],
+                        "talla_producto": item["talla_producto"],
+                        "genero_destino": recipient,
+                        "unidades_vendidas": 0,
+                    },
+                )
+                stats["unidades_vendidas"] += item["cantidad"]
+        return sorted(
+            totals.values(),
+            key=lambda item: (
+                item["genero_destino"],
+                item["nombre_producto"].casefold(),
+                -item["unidades_vendidas"],
+                item["talla_producto"].casefold(),
+            ),
+        )
+
+    def monthly_stats(self, year: int, month: int) -> dict[str, Any]:
+        total_sales = 0
+        revenue = Decimal("0")
+        for sale in self._sales:
+            sale_date = sale["fecha"]
+            if (
+                not sale["anulada"]
+                and sale_date.year == year
+                and sale_date.month == month
+            ):
+                total_sales += 1
+                revenue += sale["total"]
+        return {
+            "anio": year,
+            "mes": month,
+            "cantidad_ventas": total_sales,
+            "ingresos": revenue,
+        }
+
+    def monthly_history_stats(self) -> list[dict[str, Any]]:
+        totals: dict[tuple[int, int], dict[str, Any]] = {}
+        for sale in self._sales:
+            if sale["anulada"]:
+                continue
+            sale_date = sale["fecha"]
+            key = (sale_date.year, sale_date.month)
+            stats = totals.setdefault(
+                key,
+                {
+                    "anio": sale_date.year,
+                    "mes": sale_date.month,
+                    "cantidad_ventas": 0,
+                    "ingresos": Decimal("0"),
+                },
+            )
+            stats["cantidad_ventas"] += 1
+            stats["ingresos"] += sale["total"]
+        return [
+            totals[key]
+            for key in sorted(totals, reverse=True)
+        ]
+
     @staticmethod
     def _copy_sale(sale: Sale) -> Sale:
         return deepcopy(sale)
@@ -785,6 +865,100 @@ class SalesRepository:
                     """
                 )
                 return list(cursor.fetchall())
+            finally:
+                cursor.close()
+
+        return list(self._connection_runner(select))
+
+    def size_stats(self) -> list[dict[str, Any]]:
+        def select(connection: MySQLConnection) -> list[dict[str, Any]]:
+            cursor = connection.cursor(dictionary=True)
+            try:
+                cursor.execute(
+                    """
+                    SELECT detalle_venta.nombre_producto,
+                           detalle_venta.categoria_producto,
+                           detalle_venta.material_producto,
+                           detalle_venta.talla_producto,
+                           detalle_venta.genero_destino,
+                           SUM(detalle_venta.cantidad) AS unidades_vendidas
+                    FROM detalle_venta
+                    INNER JOIN venta ON venta.id = detalle_venta.venta_id
+                    WHERE venta.anulada = 0
+                      AND detalle_venta.genero_destino IN ('Hombre', 'Mujer')
+                    GROUP BY detalle_venta.nombre_producto,
+                             detalle_venta.categoria_producto,
+                             detalle_venta.material_producto,
+                             detalle_venta.talla_producto,
+                             detalle_venta.genero_destino
+                    ORDER BY detalle_venta.genero_destino,
+                             detalle_venta.nombre_producto,
+                             unidades_vendidas DESC,
+                             detalle_venta.talla_producto
+                    """
+                )
+                return list(cursor.fetchall())
+            finally:
+                cursor.close()
+
+        return list(self._connection_runner(select))
+
+    def monthly_stats(self, year: int, month: int) -> dict[str, Any]:
+        start = datetime(year, month, 1)
+        next_month = datetime(year + (month == 12), month % 12 + 1, 1)
+
+        def select(connection: MySQLConnection) -> dict[str, Any]:
+            cursor = connection.cursor(dictionary=True)
+            try:
+                cursor.execute(
+                    """
+                    SELECT COUNT(*) AS cantidad_ventas,
+                           COALESCE(SUM(total), 0) AS ingresos
+                    FROM venta
+                    WHERE anulada = 0
+                      AND fecha >= %s
+                      AND fecha < %s
+                    """,
+                    (start, next_month),
+                )
+                row = cursor.fetchone()
+                return {
+                    "anio": year,
+                    "mes": month,
+                    "cantidad_ventas": int(row["cantidad_ventas"]),
+                    "ingresos": Decimal(str(row["ingresos"])),
+                }
+            finally:
+                cursor.close()
+
+        return self._connection_runner(select)
+
+    def monthly_history_stats(self) -> list[dict[str, Any]]:
+        def select(connection: MySQLConnection) -> list[dict[str, Any]]:
+            cursor = connection.cursor(dictionary=True)
+            try:
+                cursor.execute(
+                    """
+                    SELECT YEAR(fecha) AS anio,
+                           MONTH(fecha) AS mes,
+                           COUNT(*) AS cantidad_ventas,
+                           SUM(total) AS ingresos
+                    FROM venta
+                    WHERE anulada = 0
+                    GROUP BY YEAR(fecha), MONTH(fecha)
+                    ORDER BY anio DESC, mes DESC
+                    """
+                )
+                return [
+                    {
+                        **row,
+                        "anio": int(row["anio"]),
+                        "mes": int(row["mes"]),
+                        "cantidad_ventas": int(row["cantidad_ventas"]),
+                        "ingresos": Decimal(str(row["ingresos"])),
+                    }
+                    for row in cursor.fetchall()
+                ]
             finally:
                 cursor.close()
 

@@ -68,6 +68,37 @@ class SalesServiceStub:
     def price_stats(self):
         return []
 
+    def size_stats(self):
+        return [
+            {
+                "product_id": 7,
+                "nombre_producto": "Anillo",
+                "categoria_producto": "anillo",
+                "material_producto": "Plata",
+                "talla_producto": "16",
+                "genero_destino": "Mujer",
+                "unidades_vendidas": 3,
+            }
+        ]
+
+    def monthly_stats(self, year, month):
+        return {
+            "anio": year,
+            "mes": month,
+            "cantidad_ventas": 2,
+            "ingresos": Decimal("25000.00"),
+        }
+
+    def monthly_history_stats(self):
+        return [
+            {
+                "anio": 2026,
+                "mes": 5,
+                "cantidad_ventas": 2,
+                "ingresos": Decimal("25000.00"),
+            }
+        ]
+
 
 def create_client(*, fail_create=False):
     sales = SalesServiceStub(fail_create=fail_create)
@@ -149,3 +180,60 @@ def test_business_validation_errors_are_returned_as_bad_request():
 
     assert response.status_code == 400
     assert response.json()["detail"] == "Stock insuficiente."
+
+
+def test_size_stats_endpoint_returns_sales_by_product_size_and_recipient():
+    client, _ = create_client()
+
+    response = client.get("/stats/sizes", auth=("tablet-admin", "test-password"))
+
+    assert response.status_code == 200
+    assert response.json()[0]["talla_producto"] == "16"
+    assert response.json()[0]["genero_destino"] == "Mujer"
+
+
+def test_monthly_stats_endpoint_returns_requested_month_totals():
+    client, _ = create_client()
+
+    response = client.get(
+        "/stats/monthly?year=2026&month=5",
+        auth=("tablet-admin", "test-password"),
+    )
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "anio": 2026,
+        "mes": 5,
+        "cantidad_ventas": 2,
+        "ingresos": "25000.00",
+    }
+
+
+def test_monthly_stats_endpoint_rejects_invalid_month():
+    client, _ = create_client()
+
+    response = client.get(
+        "/stats/monthly?year=2026&month=13",
+        auth=("tablet-admin", "test-password"),
+    )
+
+    assert response.status_code == 422
+
+
+def test_monthly_history_endpoint_returns_all_monthly_totals():
+    client, _ = create_client()
+
+    response = client.get(
+        "/stats/monthly/history",
+        auth=("tablet-admin", "test-password"),
+    )
+
+    assert response.status_code == 200
+    assert response.json() == [
+        {
+            "anio": 2026,
+            "mes": 5,
+            "cantidad_ventas": 2,
+            "ingresos": "25000.00",
+        }
+    ]

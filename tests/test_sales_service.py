@@ -100,6 +100,154 @@ def test_category_stats_show_percentages_and_price_stats_rank_unit_prices():
     ]
 
 
+def test_size_stats_rank_sizes_per_product_and_recipient_and_ignore_cancelled_sales():
+    products, sales = make_services()
+    ring_id = products.create(
+        {
+            "nombre": "Anillo",
+            "categoria": "Anillo",
+            "material": "Plata",
+            "talla": "7",
+            "precio": "12000",
+            "stock": 10,
+        }
+    )
+    ring_size_8_id = products.create(
+        {
+            "nombre": "Anillo",
+            "categoria": "Anillo",
+            "material": "Plata",
+            "talla": "8",
+            "precio": "12000",
+            "stock": 10,
+        }
+    )
+    earrings_id = products.create(
+        {
+            "nombre": "Aros",
+            "categoria": "Aros",
+            "material": "Oro",
+            "talla": "Única",
+            "precio": "8000",
+            "stock": 10,
+        }
+    )
+
+    sales.create_sale(
+        [
+            {"product_id": ring_id, "quantity": 2, "genero_destino": "Mujer"},
+            {"product_id": ring_id, "quantity": 1, "genero_destino": "Hombre"},
+            {"product_id": ring_size_8_id, "quantity": 3, "genero_destino": "Mujer"},
+            {"product_id": earrings_id, "quantity": 2, "genero_destino": "Mujer"},
+        ]
+    )
+    cancelled_sale = sales.create_sale(
+        [{"product_id": earrings_id, "quantity": 1, "genero_destino": "Mujer"}]
+    )
+    sales.cancel_sale(cancelled_sale["id"])
+
+    assert sales.size_stats() == [
+        {
+            "nombre_producto": "Anillo",
+            "categoria_producto": "anillo",
+            "material_producto": "Plata",
+            "talla_producto": "7",
+            "genero_destino": "Hombre",
+            "unidades_vendidas": 1,
+        },
+        {
+            "nombre_producto": "Anillo",
+            "categoria_producto": "anillo",
+            "material_producto": "Plata",
+            "talla_producto": "8",
+            "genero_destino": "Mujer",
+            "unidades_vendidas": 3,
+        },
+        {
+            "nombre_producto": "Anillo",
+            "categoria_producto": "anillo",
+            "material_producto": "Plata",
+            "talla_producto": "7",
+            "genero_destino": "Mujer",
+            "unidades_vendidas": 2,
+        },
+        {
+            "nombre_producto": "Aros",
+            "categoria_producto": "aros",
+            "material_producto": "Oro",
+            "talla_producto": "Única",
+            "genero_destino": "Mujer",
+            "unidades_vendidas": 2,
+        },
+    ]
+
+
+def test_monthly_stats_count_sales_and_revenue_for_requested_month_excluding_cancelled():
+    products, sales = make_services()
+    product_id = products.create(
+        {"nombre": "Collar", "categoria": "Collar", "precio": "1000", "stock": 10}
+    )
+    first_sale = sales.create_sale([{"product_id": product_id, "quantity": 2}])
+    cancelled_sale = sales.create_sale([{"product_id": product_id, "quantity": 3}])
+    other_month_sale = sales.create_sale([{"product_id": product_id, "quantity": 1}])
+    repository = sales.repository
+    repository._sales[0]["fecha"] = datetime(2026, 5, 3, 10, 0)
+    repository._sales[1]["fecha"] = datetime(2026, 5, 4, 10, 0)
+    repository._sales[2]["fecha"] = datetime(2026, 6, 1, 0, 0)
+    sales.cancel_sale(cancelled_sale["id"])
+
+    assert sales.monthly_stats(2026, 5) == {
+        "anio": 2026,
+        "mes": 5,
+        "cantidad_ventas": 1,
+        "ingresos": Decimal("2000"),
+    }
+    assert sales.monthly_stats(2026, 6) == {
+        "anio": 2026,
+        "mes": 6,
+        "cantidad_ventas": 1,
+        "ingresos": Decimal("1000"),
+    }
+
+
+def test_monthly_history_stats_groups_sales_and_revenue_by_month_and_year():
+    products, sales = make_services()
+    product_id = products.create(
+        {"nombre": "Collar", "categoria": "Collar", "precio": "1000", "stock": 10}
+    )
+    sales.create_sale([{"product_id": product_id, "quantity": 2}])
+    cancelled_sale = sales.create_sale([{"product_id": product_id, "quantity": 3}])
+    sales.create_sale([{"product_id": product_id, "quantity": 1}])
+    repository = sales.repository
+    repository._sales[0]["fecha"] = datetime(2026, 5, 3, 10, 0)
+    repository._sales[1]["fecha"] = datetime(2026, 5, 4, 10, 0)
+    repository._sales[2]["fecha"] = datetime(2025, 12, 31, 23, 59)
+    sales.cancel_sale(cancelled_sale["id"])
+
+    assert sales.monthly_history_stats() == [
+        {
+            "anio": 2026,
+            "mes": 5,
+            "cantidad_ventas": 1,
+            "ingresos": Decimal("2000"),
+        },
+        {
+            "anio": 2025,
+            "mes": 12,
+            "cantidad_ventas": 1,
+            "ingresos": Decimal("1000"),
+        },
+    ]
+
+
+@pytest.mark.parametrize(("year", "month"), [(0, 1), (2026, 0), (2026, 13)])
+def test_monthly_stats_reject_invalid_year_or_month(year, month):
+    _, sales = make_services()
+
+    with pytest.raises(ValueError):
+        sales.monthly_stats(year, month)
+
+
 def test_sale_combines_duplicate_products_and_uses_price_at_sale_time():
     products, sales = make_services()
     product_id = products.create(

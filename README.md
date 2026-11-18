@@ -2,7 +2,7 @@
 
 Aplicación de escritorio (Python + MySQL) y cliente Android en desarrollo (Kivy + API FastAPI) para la gestión de inventario de joyas de la empresa GedeNaz. Proyecto del curso Taller de Sistemas de Información (INFB8082), Grupo N°6.
 
-Incluye registro de ventas desde el inventario, boletas internas, descuento de stock, planes de cuotas sin interés con abonos parciales, calendario con historial por fecha y hora e indicadores de productos más vendidos. Los productos registran material y talla; cada línea de venta conserva si fue para hombre o mujer.
+Incluye registro de ventas desde el inventario, boletas internas, descuento de stock, planes de cuotas sin interés con abonos parciales, calendario con historial por fecha y hora e indicadores de productos y tallas más vendidas por destinatario. Las estadísticas también resumen la cantidad de ventas e ingresos del mes actual. Los productos registran material y talla; cada línea de venta conserva si fue para hombre o mujer.
 
 ## Memoria y bitácora
 
