@@ -1,0 +1,30 @@
+# Entorno virtual
+venv/
+.venv/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+*.egg-info/
+.buildozer/
+mobile/.buildozer/
+mobile/bin/
+tidb-ca.pem
+
+# Configuración local / secretos
+.env
+
+# Editor / OS
+.vscode/
+.idea/
+Thumbs.db
+.DS_Store
+
+# Secretos / entornos alternativos (TiDB)
+.env.*
+!.env.example
+env.tidb
+secrets/
+*.pem

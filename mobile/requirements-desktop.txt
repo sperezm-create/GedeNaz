@@ -1,0 +1,3 @@
+# Solo para probar la app movil en una ventana de escritorio (no es para el APK).
+kivy>=2.3
+requests>=2.31
